@@ -213,7 +213,7 @@ class _NavBarItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppRadius.continuousSm(),
+          customBorder: AppRadius.continuousSm(),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             constraints: const BoxConstraints(minHeight: 48),
