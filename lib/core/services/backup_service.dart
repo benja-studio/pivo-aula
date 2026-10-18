@@ -286,16 +286,16 @@ class BackupService {
     final photoArchive = archive.files.where((f) => f.name.startsWith('photo')).firstOrNull;
     if (photoArchive != null) {
       final docs = await getApplicationDocumentsDirectory();
-      final photoTarget = File(p.join(docs.path, 'restored_' + photoArchive.name));
+      final photoTarget = File(p.join(docs.path, 'restored_${photoArchive.name}'));
       await photoTarget.writeAsBytes(photoArchive.content as List<int>);
       if (restoredProfile != null) {
-        restoredProfile = restoredProfile!.copyWith(photoPath: photoTarget.path);
+        restoredProfile = restoredProfile.copyWith(photoPath: photoTarget.path);
       }
     }
 
     await _db.transaction(() async {
       await _db.clearAllData();
-      if (restoredProfile != null) await _db.saveProfile(restoredProfile!);
+      if (restoredProfile != null) await _db.saveProfile(restoredProfile);
       for (final subject in restoredSubjects) {
         await _db.upsertSubject(subject);
       }

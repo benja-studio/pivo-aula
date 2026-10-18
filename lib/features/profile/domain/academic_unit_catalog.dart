@@ -33,12 +33,16 @@ class AcademicUnit {
 
   String get subtitle {
     if (isCustom) return 'No figura en el catálogo · usar este nombre';
-    if (parent != null) return parent! + (location == null ? '' : ' · ' + location!);
-    return type.label + (location == null ? '' : ' · ' + location!);
+    if (parent != null) {
+      if (location == null) return parent!;
+      return '$parent · $location';
+    }
+    if (location == null) return type.label;
+    return '${type.label} · $location';
   }
 
   String get searchableText => normalizeAcademicText(
-        name + ' ' + (parent ?? '') + ' ' + (location ?? '') + ' ' + aliases.join(' '),
+        '$name ${parent ?? ''} ${location ?? ''} ${aliases.join(' ')}',
       );
 
   static AcademicUnit custom(String name) => AcademicUnit(
@@ -152,7 +156,7 @@ const List<AcademicUnit> _institutions = [
 
 List<AcademicUnit> _facultiesFor(String university, String acronym, String location, List<String> names) {
   return names.map((name) => AcademicUnit(
-    name: name.startsWith('Facultad ') ? name : 'Facultad de ' + name,
+    name: name.startsWith('Facultad ') ? name : 'Facultad de $name',
     type: AcademicUnitType.faculty,
     parent: university,
     location: location,
@@ -237,7 +241,7 @@ final List<AcademicUnit> academicUnitCatalog = List.unmodifiable([
   const AcademicUnit(name: 'Departamento de Economía y Administración', type: AcademicUnitType.department, parent: 'Universidad Nacional de Quilmes', location: 'Bernal, Buenos Aires', aliases: ['UNQ']),
   const AcademicUnit(name: 'Escuela Universitaria de Artes', type: AcademicUnitType.school, parent: 'Universidad Nacional de Quilmes', location: 'Bernal, Buenos Aires', aliases: ['UNQ']),
   ..._utnRegionalFaculties.map((row) => AcademicUnit(
-    name: 'Facultad Regional ' + row[0],
+    name: 'Facultad Regional ${row[0]}',
     type: AcademicUnitType.faculty,
     parent: 'Universidad Tecnológica Nacional',
     location: row[2],

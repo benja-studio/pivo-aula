@@ -71,9 +71,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _localBackupDate(File file) {
     final date = file.lastModifiedSync();
     String twoDigits(int value) => value.toString().padLeft(2, '0');
-    return twoDigits(date.day) + '/' + twoDigits(date.month) + '/' +
-        date.year.toString() + ' · ' + twoDigits(date.hour) + ':' +
-        twoDigits(date.minute);
+    return '${twoDigits(date.day)}/${twoDigits(date.month)}/${date.year} · ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
   }
 
   Future<String?> _askBackupPassword() async {
@@ -144,7 +142,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (mounted) {
         final message = error.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se pudo restaurar el respaldo: ' + message)),
+          SnackBar(content: Text('No se pudo restaurar el respaldo: $message')),
         );
       }
     } finally {
@@ -170,13 +168,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 final file = _localBackups[index];
                 final size = file.lengthSync();
                 final sizeLabel = size > 1024 * 1024
-                    ? (size / (1024 * 1024)).toStringAsFixed(1) + ' MB'
-                    : (size / 1024).toStringAsFixed(0) + ' KB';
+                    ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
+                    : '${(size / 1024).toStringAsFixed(0)} KB';
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.history_rounded),
                   title: Text(_localBackupDate(file)),
-                  subtitle: Text(sizeLabel + ' · Copia local'),
+                  subtitle: Text('$sizeLabel · Copia local'),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => Navigator.of(ctx).pop(file),
                 );
@@ -199,7 +197,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (mounted) {
         final message = error.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se pudo recuperar la copia local: ' + message)),
+          SnackBar(content: Text('No se pudo recuperar la copia local: $message')),
         );
       }
     } finally {
@@ -410,7 +408,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       TextButton.icon(
                         onPressed: _isRestoringBackup ? null : _restoreLocalSnapshot,
                         icon: const Icon(Icons.history_rounded, size: 18),
-                        label: Text('Recuperar copia local (' + _localBackups.length.toString() + ')'),
+                        label: Text('Recuperar copia local (${_localBackups.length})'),
                       ),
                   ],
                 ],
