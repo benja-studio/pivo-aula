@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_colors.dart';
 import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
@@ -35,8 +36,13 @@ class EmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: ShapeDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.2 : 0.1),
-                shape: AppRadius.continuousLg(),
+                color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.16 : 0.08),
+                shape: AppRadius.continuousLg(
+                  side: BorderSide(
+                    color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.28 : 0.16),
+                    width: 1,
+                  ),
+                ),
               ),
               child: Icon(
                 icon,
@@ -49,7 +55,8 @@ class EmptyState extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: AppTypography.titleMedium.copyWith(
-                color: isDark ? Colors.white : const Color(0xFF111827),
+                color: AppColors.textPrimary(context),
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -57,7 +64,7 @@ class EmptyState extends StatelessWidget {
               description,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280),
+                color: AppColors.textSecondary(context),
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -66,6 +73,7 @@ class EmptyState extends StatelessWidget {
                 label: actionLabel!,
                 onPressed: onAction,
                 icon: Icons.add_rounded,
+                variant: AppButtonVariant.primary,
               ),
             ],
           ],

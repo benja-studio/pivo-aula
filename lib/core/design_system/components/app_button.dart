@@ -1,27 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../app_colors.dart';
+import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
 
-enum AppButtonVariant { primary, secondary, ghost, danger }
+enum AppButtonVariant {
+  primary,
+  secondary,
+  subtle,
+  ghost,
+  danger,
+}
+
+enum AppButtonSize {
+  sm(36.0, 12.0, 15.0),
+  md(46.0, 18.0, 18.0),
+  lg(54.0, 22.0, 20.0);
+
+  final double height;
+  final double horizontalPadding;
+  final double iconSize;
+
+  const AppButtonSize(this.height, this.horizontalPadding, this.iconSize);
+}
 
 class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final IconData? trailingIcon;
   final AppButtonVariant variant;
+  final AppButtonSize size;
   final bool isLoading;
   final bool isExpanded;
-  final double height;
+  final double? height;
+  final bool enableHaptics;
 
   const AppButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
+    this.trailingIcon,
     this.variant = AppButtonVariant.primary,
+    this.size = AppButtonSize.md,
     this.isLoading = false,
     this.isExpanded = false,
-    this.height = 48.0,
+    this.height,
+    this.enableHaptics = true,
   });
 
   @override
@@ -37,12 +64,18 @@ class _AppButtonState extends State<AppButton> {
     setState(() => _isPressed = next);
   }
 
+  void _handleTap() {
+    if (widget.enableHaptics) {
+      HapticFeedback.lightImpact();
+    }
+    widget.onPressed?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final reduceMotion =
-        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final enabled = widget.onPressed != null && !widget.isLoading;
 
     Color bg;
@@ -52,75 +85,98 @@ class _AppButtonState extends State<AppButton> {
     switch (widget.variant) {
       case AppButtonVariant.primary:
         bg = theme.colorScheme.primary;
-        fg = theme.colorScheme.onPrimary;
+        fg = Colors.white;
+        border = BorderSide.none;
       case AppButtonVariant.secondary:
-        bg = isDark ? const Color(0xFF22262E) : const Color(0xFFF3F4F6);
-        fg = isDark ? Colors.white : const Color(0xFF111827);
+        bg = isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface;
+        fg = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
         border = BorderSide(
-          color: isDark ? const Color(0xFF343A46) : const Color(0xFFE5E7EB),
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          width: 1,
+        );
+      case AppButtonVariant.subtle:
+        bg = theme.colorScheme.primary.withValues(alpha: isDark ? 0.20 : 0.10);
+        fg = isDark ? AppColors.primaryDark : AppColors.primary;
+        border = BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.20),
+          width: 1,
         );
       case AppButtonVariant.ghost:
         bg = Colors.transparent;
-        fg = theme.colorScheme.primary;
+        fg = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        border = BorderSide.none;
       case AppButtonVariant.danger:
-        bg = const Color(0xFFDC3838);
+        bg = AppColors.error;
         fg = Colors.white;
+        border = BorderSide.none;
     }
 
     if (!enabled) {
-      bg = bg.withValues(alpha: 0.55);
-      fg = fg.withValues(alpha: 0.62);
+      bg = bg.withValues(alpha: 0.50);
+      fg = fg.withValues(alpha: 0.55);
+      if (border != BorderSide.none) {
+        border = border.copyWith(color: border.color.withValues(alpha: 0.40));
+      }
     }
 
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: border,
+    final shape = AppRadius.continuousMd(side: border);
+
+    final content = AnimatedSwitcher(
+      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 150),
+      child: widget.isLoading
+          ? SizedBox(
+              key: const ValueKey('loading'),
+              width: widget.size.iconSize + 2,
+              height: widget.size.iconSize + 2,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                strokeCap: StrokeCap.round,
+                valueColor: AlwaysStoppedAnimation<Color>(fg),
+              ),
+            )
+          : Row(
+              key: const ValueKey('content'),
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, size: widget.size.iconSize, color: fg),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                Flexible(
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: (widget.size == AppButtonSize.sm
+                            ? AppTypography.label
+                            : widget.size == AppButtonSize.lg
+                                ? AppTypography.titleSmall
+                                : AppTypography.button)
+                        .copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (widget.trailingIcon != null) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(widget.trailingIcon, size: widget.size.iconSize, color: fg),
+                ],
+              ],
+            ),
     );
 
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (widget.isLoading) ...[
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(fg),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-        ] else if (widget.icon != null) ...[
-          Icon(widget.icon, size: 18, color: fg),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-        Flexible(
-          child: Text(
-            widget.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            softWrap: false,
-            style: AppTypography.titleSmall.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
-    );
-
-    final buttonHeight = widget.height < 48 ? 48.0 : widget.height;
-    final duration = reduceMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 110);
+    final buttonHeight = widget.height ?? widget.size.height;
+    final duration = reduceMotion ? Duration.zero : const Duration(milliseconds: 100);
 
     return AnimatedScale(
-      scale: _isPressed ? 0.985 : 1,
+      scale: _isPressed ? 0.975 : 1.0,
       duration: duration,
       curve: Curves.easeOutCubic,
       child: AnimatedOpacity(
-        opacity: _isPressed ? 0.96 : 1,
+        opacity: _isPressed ? 0.94 : 1.0,
         duration: duration,
         child: SizedBox(
           height: buttonHeight,
@@ -131,13 +187,15 @@ class _AppButtonState extends State<AppButton> {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               customBorder: shape,
-              onTap: enabled ? widget.onPressed : null,
+              onTap: enabled ? _handleTap : null,
               onHighlightChanged: (pressed) =>
                   _setPressed(pressed, enabled, reduceMotion),
-              splashColor: fg.withValues(alpha: 0.13),
-              highlightColor: fg.withValues(alpha: 0.08),
+              splashColor: fg.withValues(alpha: 0.12),
+              highlightColor: fg.withValues(alpha: 0.06),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                padding: EdgeInsets.symmetric(
+                  horizontal: widget.size.horizontalPadding,
+                ),
                 child: Center(child: content),
               ),
             ),

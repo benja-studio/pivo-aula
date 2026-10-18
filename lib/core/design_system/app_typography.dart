@@ -77,4 +77,61 @@ class AppTypography {
     letterSpacing: 0.3,
     height: 1.25,
   );
+
+  static const TextStyle bodySmall = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.0,
+    height: 1.4,
+  );
+
+  /// Uppercase section headers, badge labels, and micro categories
+  static const TextStyle eyebrow = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
+    height: 1.2,
+  );
+
+  /// Numerical displays with tabular figures to avoid horizontal jitter
+  static const TextStyle statNumber = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    height: 1.15,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  static const TextStyle statUnit = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+    height: 1.2,
+  );
+
+  static const TextStyle button = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+    height: 1.25,
+  );
+
+  static const TextStyle code = TextStyle(
+    fontFamily: 'monospace',
+    fontFamilyFallback: fontFallbacks,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    height: 1.3,
+  );
 }

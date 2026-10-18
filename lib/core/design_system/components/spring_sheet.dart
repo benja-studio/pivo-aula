@@ -1,39 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/services.dart';
 import '../../utils/spring_helpers.dart';
+import '../app_colors.dart';
 import '../app_motion.dart';
 import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
 
-/// A keyboard-aware, scrollable bottom sheet with a dedicated drag handle.
+/// A keyboard-aware, spring-physics bottom sheet with refined header and tactile affordances.
 class SpringSheet extends StatefulWidget {
   final Widget child;
   final String? title;
+  final String? subtitle;
   final Widget? trailing;
+  final bool showCloseButton;
 
   const SpringSheet({
     super.key,
     required this.child,
     this.title,
+    this.subtitle,
     this.trailing,
+    this.showCloseButton = false,
   });
 
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget child,
     String? title,
+    String? subtitle,
     Widget? trailing,
+    bool showCloseButton = false,
   }) {
+    HapticFeedback.lightImpact();
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       useSafeArea: true,
       builder: (context) => SpringSheet(
         title: title,
+        subtitle: subtitle,
         trailing: trailing,
+        showCloseButton: showCloseButton,
         child: child,
       ),
     );
@@ -103,11 +114,10 @@ class _SpringSheetState extends State<SpringSheet>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final mediaQuery = MediaQuery.of(context);
-    final bg = isDark ? const Color(0xFF181B20) : Colors.white;
-    final shape = AppRadius.continuousXl();
+    final bg = isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final shape = AppRadius.continuousXl(side: BorderSide(color: border, width: 1));
 
-    // The modal route already removes the keyboard inset from its constraints.
-    // Use those live constraints instead of subtracting viewInsets a second time.
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableHeight = constraints.maxHeight.isFinite
@@ -117,15 +127,15 @@ class _SpringSheetState extends State<SpringSheet>
         return Transform.translate(
           offset: Offset(0, _dragOffset),
           child: Container(
-            constraints: BoxConstraints(maxHeight: availableHeight * 0.96),
+            constraints: BoxConstraints(maxHeight: availableHeight * 0.94),
             decoration: ShapeDecoration(
               color: bg,
               shape: shape,
               shadows: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  blurRadius: 24,
-                  offset: const Offset(0, -6),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                  blurRadius: 28,
+                  offset: const Offset(0, -8),
                 ),
               ],
             ),
@@ -134,53 +144,92 @@ class _SpringSheetState extends State<SpringSheet>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.xs + 2),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onVerticalDragUpdate: _onVerticalDragUpdate,
                     onVerticalDragEnd: _onVerticalDragEnd,
                     child: SizedBox(
-                      width: 88,
-                      height: 32,
+                      width: 96,
+                      height: 28,
                       child: Center(
                         child: Container(
-                          width: 38,
-                          height: 4,
+                          width: 42,
+                          height: 4.5,
                           decoration: BoxDecoration(
                             color: isDark
-                                ? const Color(0xFF4B5563)
-                                : const Color(0xFFD1D5DB),
+                                ? const Color(0xFF3E4554)
+                                : const Color(0xFFCBD5E1),
                             borderRadius: BorderRadius.circular(99),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  if (widget.title != null || widget.trailing != null) ...[
+                  if (widget.title != null ||
+                      widget.subtitle != null ||
+                      widget.trailing != null ||
+                      widget.showCloseButton) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.xl,
-                        AppSpacing.sm,
+                        AppSpacing.xs,
                         AppSpacing.lg,
                         AppSpacing.md,
                       ),
                       child: Row(
                         children: [
-                          if (widget.title != null)
-                            Expanded(
-                              child: Text(
-                                widget.title!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.titleMedium.copyWith(
-                                  color: isDark ? Colors.white : const Color(0xFF111827),
-                                ),
-                              ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.title != null)
+                                  Text(
+                                    widget.title!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.titleMedium.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.lightTextPrimary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                if (widget.subtitle != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.subtitle!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.caption.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
+                          ),
                           if (widget.trailing != null) ...[
-                            if (widget.title != null)
-                              const SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             widget.trailing!,
+                          ],
+                          if (widget.showCloseButton) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              iconSize: 20,
+                              style: IconButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? AppColors.darkSurface
+                                    : AppColors.lightSurfaceElevated,
+                                shape: const CircleBorder(),
+                              ),
+                              icon: const Icon(Icons.close_rounded),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
                           ],
                         ],
                       ),
@@ -188,9 +237,7 @@ class _SpringSheetState extends State<SpringSheet>
                     Divider(
                       height: 1,
                       thickness: 1,
-                      color: isDark
-                          ? const Color(0xFF262A32)
-                          : const Color(0xFFF3F4F6),
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                     ),
                   ],
                   Flexible(
@@ -199,7 +246,7 @@ class _SpringSheetState extends State<SpringSheet>
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.fromLTRB(
                         AppSpacing.xl,
-                        AppSpacing.xl,
+                        AppSpacing.lg,
                         AppSpacing.xl,
                         AppSpacing.lg + mediaQuery.padding.bottom,
                       ),

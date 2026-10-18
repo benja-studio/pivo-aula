@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/services.dart';
 import '../app_motion.dart';
 
 /// Tactile interaction wrapper with spring feedback.
@@ -13,6 +14,7 @@ class PressableScale extends StatefulWidget {
   final double pressedScale;
   final double pressedOpacity;
   final HitTestBehavior behavior;
+  final bool enableHaptics;
 
   const PressableScale({
     super.key,
@@ -22,6 +24,7 @@ class PressableScale extends StatefulWidget {
     this.pressedScale = 0.97,
     this.pressedOpacity = 0.94,
     this.behavior = HitTestBehavior.opaque,
+    this.enableHaptics = false,
   });
 
   @override
@@ -67,6 +70,20 @@ class _PressableScaleState extends State<PressableScale>
 
   void _release() => _animateTo(1.0);
 
+  void _handleTap() {
+    if (widget.enableHaptics) {
+      HapticFeedback.lightImpact();
+    }
+    widget.onTap?.call();
+  }
+
+  void _handleLongPress() {
+    if (widget.enableHaptics) {
+      HapticFeedback.mediumImpact();
+    }
+    widget.onLongPress?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final canPress = widget.onTap != null || widget.onLongPress != null;
@@ -76,7 +93,7 @@ class _PressableScaleState extends State<PressableScale>
       onTapDown: canPress ? (_) => _animateTo(widget.pressedScale) : null,
       onTapUp: canPress ? (_) => _release() : null,
       onTapCancel: canPress ? _release : null,
-      onTap: widget.onTap,
+      onTap: widget.onTap != null ? _handleTap : null,
       onLongPressStart: widget.onLongPress == null
           ? null
           : (_) => _animateTo(widget.pressedScale),
@@ -84,7 +101,7 @@ class _PressableScaleState extends State<PressableScale>
           ? null
           : (_) {
               _release();
-              widget.onLongPress?.call();
+              _handleLongPress();
             },
       child: AnimatedBuilder(
         animation: _controller,

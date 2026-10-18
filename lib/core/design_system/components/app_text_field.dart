@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import '../app_colors.dart';
 import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final String? label;
@@ -40,75 +41,126 @@ class AppTextField extends StatelessWidget {
   });
 
   @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  late FocusNode _effectiveFocusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _effectiveFocusNode = widget.focusNode ?? FocusNode();
+    _effectiveFocusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusNode != oldWidget.focusNode) {
+      if (oldWidget.focusNode == null) {
+        _effectiveFocusNode.removeListener(_onFocusChange);
+        _effectiveFocusNode.dispose();
+      } else {
+        oldWidget.focusNode?.removeListener(_onFocusChange);
+      }
+      _effectiveFocusNode = widget.focusNode ?? FocusNode();
+      _effectiveFocusNode.addListener(_onFocusChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    _effectiveFocusNode.removeListener(_onFocusChange);
+    if (widget.focusNode == null) {
+      _effectiveFocusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_effectiveFocusNode.hasFocus != _isFocused) {
+      setState(() => _isFocused = _effectiveFocusNode.hasFocus);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final hasError = errorText != null && errorText!.isNotEmpty;
+    final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
     final borderColor = hasError
-        ? const Color(0xFFEF4444)
-        : (isDark ? const Color(0xFF2A2E37) : const Color(0xFFE5E7EB));
-    final fillColor = isDark ? const Color(0xFF1E222A) : const Color(0xFFF9FAFB);
+        ? AppColors.error
+        : _isFocused
+            ? theme.colorScheme.primary
+            : (isDark ? AppColors.darkBorder : AppColors.lightBorder);
+
+    final fillColor = isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (label != null) ...[
+        if (widget.label != null) ...[
           Text(
-            label!,
+            widget.label!,
             style: AppTypography.titleSmall.copyWith(
-              color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF374151),
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
               fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
         ],
-        Container(
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
           decoration: ShapeDecoration(
             color: fillColor,
             shape: AppRadius.continuousMd(
               side: BorderSide(
                 color: borderColor,
-                width: hasError ? 1.5 : 1.0,
+                width: hasError || _isFocused ? 1.5 : 1.0,
               ),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
-            maxLines: maxLines,
+            controller: widget.controller,
+            focusNode: _effectiveFocusNode,
+            obscureText: widget.obscureText,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
+            maxLines: widget.maxLines,
             scrollPadding: const EdgeInsets.fromLTRB(0, 24, 0, 120),
-            autofocus: autofocus,
-            enabled: enabled,
+            autofocus: widget.autofocus,
+            enabled: widget.enabled,
             style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? Colors.white : const Color(0xFF111827),
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
             ),
             decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              hintText: hint,
+              hintText: widget.hint,
               hintStyle: AppTypography.bodyMedium.copyWith(
-                color: isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
               ),
-              prefixIcon: prefixIcon,
-              suffixIcon: suffixIcon,
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: widget.suffixIcon,
             ),
           ),
         ),
         if (hasError) ...[
           const SizedBox(height: AppSpacing.xxs + 2),
           Text(
-            errorText!,
+            widget.errorText!,
             style: AppTypography.caption.copyWith(
-              color: const Color(0xFFEF4444),
+              color: AppColors.error,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

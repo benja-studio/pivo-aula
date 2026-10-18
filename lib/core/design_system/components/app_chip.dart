@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_colors.dart';
 import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
@@ -10,6 +11,7 @@ class AppChip extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? icon;
   final Color? activeColor;
+  final int? count;
 
   const AppChip({
     super.key,
@@ -18,6 +20,7 @@ class AppChip extends StatelessWidget {
     this.onTap,
     this.icon,
     this.activeColor,
+    this.count,
   });
 
   @override
@@ -27,27 +30,27 @@ class AppChip extends StatelessWidget {
     final primary = activeColor ?? theme.colorScheme.primary;
 
     final bg = isSelected
-        ? primary.withValues(alpha: isDark ? 0.25 : 0.12)
-        : (isDark ? const Color(0xFF1E222A) : const Color(0xFFF3F4F6));
+        ? primary.withValues(alpha: isDark ? 0.22 : 0.12)
+        : (isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated);
 
     final fg = isSelected
-        ? primary
-        : (isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563));
+        ? (isDark ? AppColors.primaryDark : primary)
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
 
     final border = isSelected
-        ? BorderSide(color: primary.withValues(alpha: 0.5), width: 1)
+        ? BorderSide(color: primary.withValues(alpha: isDark ? 0.45 : 0.35), width: 1)
         : BorderSide(
-            color: isDark ? const Color(0xFF2A2E37) : const Color(0xFFE5E7EB),
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             width: 1,
           );
 
     final chip = AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      constraints: const BoxConstraints(minHeight: 44),
+      duration: const Duration(milliseconds: 140),
+      constraints: const BoxConstraints(minHeight: 38),
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs + 2,
+        vertical: AppSpacing.xs,
       ),
       decoration: ShapeDecoration(
         color: bg,
@@ -64,15 +67,34 @@ class AppChip extends StatelessWidget {
             label,
             style: AppTypography.label.copyWith(
               color: fg,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
+          if (count != null) ...[
+            const SizedBox(width: AppSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: fg.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                count.toString(),
+                style: AppTypography.caption.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
 
     if (onTap != null) {
       return PressableScale(
+        enableHaptics: true,
         onTap: onTap,
         child: chip,
       );

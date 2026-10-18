@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_radius.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
+import '../../../core/design_system/components/animated_counter.dart';
 import '../../../core/design_system/components/app_card.dart';
 import '../../../core/design_system/components/pressable_scale.dart';
 import '../../../core/utils/formatters.dart';
@@ -80,7 +82,10 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         '¡Hola, ${profile?.fullName.split(' ').first ?? 'Estudiante'}!',
-                        style: AppTypography.display.copyWith(fontSize: 26),
+                        style: AppTypography.display.copyWith(
+                          fontSize: 26,
+                          color: AppColors.textPrimary(context),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -88,7 +93,7 @@ class HomeScreen extends ConsumerWidget {
                       Text(
                         '${profile?.career ?? 'Universidad'} · ${profile?.currentPeriod ?? ''}',
                         style: AppTypography.caption.copyWith(
-                          color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280),
+                          color: AppColors.textSecondary(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -137,7 +142,7 @@ class HomeScreen extends ConsumerWidget {
                   child: _QuickActionButton(
                     icon: Icons.grade_rounded,
                     label: 'Nota',
-                    color: Colors.green,
+                    color: AppColors.success,
                     onTap: () => UpsertGradeSheet.show(context),
                   ),
                 ),
@@ -146,7 +151,7 @@ class HomeScreen extends ConsumerWidget {
                   child: _QuickActionButton(
                     icon: Icons.bookmark_add_rounded,
                     label: 'Materia',
-                    color: Colors.purple,
+                    color: const Color(0xFF7C3AED),
                     onTap: () => UpsertSubjectSheet.show(context),
                   ),
                 ),
@@ -156,7 +161,12 @@ class HomeScreen extends ConsumerWidget {
 
             // Featured Next Exam Countdown Card
             if (nextExam != null) ...[
-              Text('Próxima evaluación', style: AppTypography.titleMedium),
+              Text(
+                'Próxima evaluación',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
               const SizedBox(height: AppSpacing.sm),
               _FeaturedExamCard(
                 exam: nextExam,
@@ -168,11 +178,18 @@ class HomeScreen extends ConsumerWidget {
             // Overdue Exams without grade loaded
             if (pastExamsWithoutGrade.isNotEmpty) ...[
               AppCard(
-                color: Colors.amber.withValues(alpha: isDark ? 0.2 : 0.1),
-                border: BorderSide(color: Colors.amber.withValues(alpha: 0.5)),
+                color: AppColors.warning.withValues(alpha: isDark ? 0.16 : 0.08),
+                border: BorderSide(
+                  color: AppColors.warning.withValues(alpha: isDark ? 0.35 : 0.25),
+                  width: 1,
+                ),
                 child: Row(
                   children: [
-                    const Icon(Icons.pending_actions_rounded, color: Colors.amber, size: 28),
+                    const Icon(
+                      Icons.pending_actions_rounded,
+                      color: AppColors.warning,
+                      size: 26,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -180,30 +197,41 @@ class HomeScreen extends ConsumerWidget {
                         children: [
                           Text(
                             '${pastExamsWithoutGrade.length} exámenes pendientes de nota',
-                            style: AppTypography.titleSmall.copyWith(color: Colors.amber[800]),
+                            style: AppTypography.titleSmall.copyWith(
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             '¿Ya te dieron la calificación de "${pastExamsWithoutGrade.first.title}"?',
-                            style: AppTypography.caption,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary(context),
+                            ),
                           ),
                         ],
                       ),
                     ),
                     PressableScale(
+                      enableHaptics: true,
                       onTap: () => UpsertGradeSheet.show(
                         context,
                         preselectedSubjectId: pastExamsWithoutGrade.first.subjectId,
                         preselectedExamId: pastExamsWithoutGrade.first.id,
                       ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: ShapeDecoration(
-                          color: Colors.amber[800],
+                          color: AppColors.warning,
                           shape: AppRadius.continuousSm(),
                         ),
                         child: const Text(
                           'Cargar',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -221,20 +249,35 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.overallAverage, style: AppTypography.caption),
-                        const SizedBox(height: AppSpacing.xs),
                         Text(
-                          allGrades.isNotEmpty ? AppFormatters.grade(overallAverage) : '-',
-                          style: AppTypography.display.copyWith(
-                            fontSize: 28,
-                            color: overallAverage >= (profile?.passingGrade ?? 4.0)
-                                ? Colors.green
-                                : Colors.red,
+                          AppStrings.overallAverage,
+                          style: AppTypography.eyebrow.copyWith(
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.xs),
+                        allGrades.isNotEmpty
+                            ? AnimatedCounter(
+                                value: overallAverage,
+                                precision: 2,
+                                style: AppTypography.statNumber.copyWith(
+                                  color: overallAverage >= (profile?.passingGrade ?? 4.0)
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                ),
+                              )
+                            : Text(
+                                '-',
+                                style: AppTypography.statNumber.copyWith(
+                                  color: AppColors.textPrimary(context),
+                                ),
+                              ),
+                        const SizedBox(height: 2),
                         Text(
                           allGrades.isNotEmpty ? '${allGrades.length} notas' : 'Sin notas',
-                          style: AppTypography.caption.copyWith(color: Colors.grey),
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textTertiary(context),
+                          ),
                         ),
                       ],
                     ),
@@ -246,18 +289,26 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Materias cursando', style: AppTypography.caption),
-                        const SizedBox(height: AppSpacing.xs),
                         Text(
-                          allSubjects.length.toString(),
-                          style: AppTypography.display.copyWith(
-                            fontSize: 28,
+                          'MATERIAS CURSANDO',
+                          style: AppTypography.eyebrow.copyWith(
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        AnimatedCounter(
+                          value: allSubjects.length.toDouble(),
+                          precision: 0,
+                          style: AppTypography.statNumber.copyWith(
                             color: theme.colorScheme.primary,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           '${allExams.length} exámenes total',
-                          style: AppTypography.caption.copyWith(color: Colors.grey),
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textTertiary(context),
+                          ),
                         ),
                       ],
                     ),
@@ -271,7 +322,13 @@ class HomeScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Esta semana', style: AppTypography.titleMedium),
+                Text(
+                  'Esta semana',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.textPrimary(context),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 TextButton(
                   onPressed: () => context.go('/calendar'),
                   child: const Text('Ver calendario'),
@@ -283,16 +340,27 @@ class HomeScreen extends ConsumerWidget {
               AppCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 24),
+                    const Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: AppColors.success,
+                      size: 24,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('¡Semana tranquila!', style: AppTypography.titleSmall),
+                          Text(
+                            '¡Semana tranquila!',
+                            style: AppTypography.titleSmall.copyWith(
+                              color: AppColors.textPrimary(context),
+                            ),
+                          ),
                           Text(
                             'No tenés exámenes programados para los próximos 7 días.',
-                            style: AppTypography.caption.copyWith(color: Colors.grey),
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary(context),
+                            ),
                           ),
                         ],
                       ),
@@ -324,25 +392,36 @@ class HomeScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(e.title, style: AppTypography.titleSmall),
+                              Text(
+                                e.title,
+                                style: AppTypography.titleSmall.copyWith(
+                                  color: AppColors.textPrimary(context),
+                                ),
+                              ),
                               Text(
                                 '${sub?.name ?? ''} · ${AppFormatters.date(e.dateTime)} ${AppFormatters.time(e.dateTime)}',
-                                style: AppTypography.caption.copyWith(color: Colors.grey),
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.textTertiary(context),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: ShapeDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
-                            shape: AppRadius.continuousSm(),
+                            color: AppColors.warning.withValues(alpha: isDark ? 0.20 : 0.12),
+                            shape: AppRadius.continuousSm(
+                              side: BorderSide(
+                                color: AppColors.warning.withValues(alpha: isDark ? 0.35 : 0.20),
+                              ),
+                            ),
                           ),
                           child: Text(
                             AppFormatters.countdown(e.dateTime),
                             style: AppTypography.caption.copyWith(
-                              color: Colors.amber[800],
-                              fontWeight: FontWeight.bold,
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -377,24 +456,29 @@ class _QuickActionButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return PressableScale(
+      enableHaptics: true,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: ShapeDecoration(
-          color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+          color: color.withValues(alpha: isDark ? 0.16 : 0.08),
           shape: AppRadius.continuousMd(
-            side: BorderSide(color: color.withValues(alpha: 0.3)),
+            side: BorderSide(
+              color: color.withValues(alpha: isDark ? 0.32 : 0.20),
+              width: 1,
+            ),
           ),
         ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 22),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             Text(
               '+ $label',
               style: AppTypography.caption.copyWith(
                 color: color,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
               ),
             ),
           ],
@@ -418,8 +502,11 @@ class _FeaturedExamCard extends StatelessWidget {
 
     return AppCard(
       onTap: () => context.push('/exams/${exam.id}'),
-      color: isDark ? const Color(0xFF1B202A) : const Color(0xFFEFF4FF),
-      border: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+      color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface,
+      border: BorderSide(
+        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        width: 1,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -429,28 +516,36 @@ class _FeaturedExamCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: ShapeDecoration(
-                  color: subjectColor.withValues(alpha: 0.15),
-                  shape: AppRadius.continuousSm(),
+                  color: subjectColor.withValues(alpha: isDark ? 0.22 : 0.12),
+                  shape: AppRadius.continuousSm(
+                    side: BorderSide(
+                      color: subjectColor.withValues(alpha: isDark ? 0.40 : 0.25),
+                    ),
+                  ),
                 ),
                 child: Text(
                   subject?.name ?? 'Materia',
                   style: AppTypography.caption.copyWith(
                     color: subjectColor,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: ShapeDecoration(
-                  color: Colors.red.withValues(alpha: 0.15),
-                  shape: AppRadius.continuousSm(),
+                  color: AppColors.error.withValues(alpha: isDark ? 0.20 : 0.10),
+                  shape: AppRadius.continuousSm(
+                    side: BorderSide(
+                      color: AppColors.error.withValues(alpha: isDark ? 0.40 : 0.25),
+                    ),
+                  ),
                 ),
                 child: Text(
                   AppFormatters.countdown(exam.dateTime),
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
                 ),
@@ -458,21 +553,41 @@ class _FeaturedExamCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(exam.title, style: AppTypography.titleLarge),
+          Text(
+            exam.title,
+            style: AppTypography.titleLarge.copyWith(
+              color: AppColors.textPrimary(context),
+            ),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 14,
+                color: AppColors.textTertiary(context),
+              ),
+              const SizedBox(width: 5),
               Text(
                 '${AppFormatters.date(exam.dateTime)} · ${AppFormatters.time(exam.dateTime)} hs',
-                style: AppTypography.bodyMedium,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary(context),
+                ),
               ),
               if (exam.classroom != null) ...[
                 const SizedBox(width: 12),
-                const Icon(Icons.room_outlined, size: 14, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(exam.classroom!, style: AppTypography.bodyMedium),
+                Icon(
+                  Icons.room_outlined,
+                  size: 14,
+                  color: AppColors.textTertiary(context),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  exam.classroom!,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
               ],
             ],
           ),

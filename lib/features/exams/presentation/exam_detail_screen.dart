@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_radius.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
@@ -75,7 +76,7 @@ class ExamDetailScreen extends ConsumerWidget {
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
                     ),
                   ],
                 ),
@@ -115,8 +116,12 @@ class ExamDetailScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: ShapeDecoration(
-                          color: subjectColor.withValues(alpha: 0.15),
-                          shape: AppRadius.continuousSm(),
+                          color: subjectColor.withValues(alpha: isDark ? 0.22 : 0.12),
+                          shape: AppRadius.continuousSm(
+                            side: BorderSide(
+                              color: subjectColor.withValues(alpha: isDark ? 0.40 : 0.25),
+                            ),
+                          ),
                         ),
                         child: Text(
                           subject.name,
@@ -129,13 +134,17 @@ class ExamDetailScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: ShapeDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
-                        shape: AppRadius.continuousSm(),
+                        color: AppColors.warning.withValues(alpha: isDark ? 0.20 : 0.12),
+                        shape: AppRadius.continuousSm(
+                          side: BorderSide(
+                            color: AppColors.warning.withValues(alpha: isDark ? 0.35 : 0.20),
+                          ),
+                        ),
                       ),
                       child: Text(
                         AppFormatters.countdown(exam.dateTime),
                         style: AppTypography.caption.copyWith(
-                          color: Colors.amber[800],
+                          color: AppColors.warning,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -145,16 +154,25 @@ class ExamDetailScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   exam.title,
-                  style: AppTypography.display.copyWith(fontSize: 24),
+                  style: AppTypography.display.copyWith(
+                    fontSize: 24,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 16,
+                      color: AppColors.textTertiary(context),
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       '${AppFormatters.date(exam.dateTime)} · ${AppFormatters.time(exam.dateTime)} hs (${exam.durationMinutes} min)',
-                      style: AppTypography.bodyMedium,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary(context),
+                      ),
                     ),
                   ],
                 ),
@@ -162,9 +180,18 @@ class ExamDetailScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
-                      const Icon(Icons.room_outlined, size: 16, color: Colors.grey),
+                      Icon(
+                        Icons.room_outlined,
+                        size: 16,
+                        color: AppColors.textTertiary(context),
+                      ),
                       const SizedBox(width: 6),
-                      Text(exam.classroom!, style: AppTypography.bodyMedium),
+                      Text(
+                        exam.classroom!,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -247,7 +274,7 @@ class ExamDetailScreen extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: topics.length,
-              onReorderItem: (oldIndex, newIndex) {
+              onReorder: (oldIndex, newIndex) {
                 ref.read(topicControllerProvider.notifier).reorderTopics(
                       List.of(topics),
                       oldIndex,
@@ -316,7 +343,9 @@ class ExamDetailScreen extends ConsumerWidget {
                                     const SizedBox(width: 8),
                                     Text(
                                       'Prioridad ${t.priority.label}',
-                                      style: AppTypography.caption.copyWith(color: Colors.grey),
+                                      style: AppTypography.caption.copyWith(
+                                        color: AppColors.textTertiary(context),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -327,7 +356,10 @@ class ExamDetailScreen extends ConsumerWidget {
                         // Drag Handle
                         ReorderableDragStartListener(
                           index: index,
-                          child: const Icon(Icons.drag_indicator_rounded, color: Colors.grey),
+                          child: Icon(
+                            Icons.drag_indicator_rounded,
+                            color: AppColors.textTertiary(context),
+                          ),
                         ),
                       ],
                     ),
@@ -358,13 +390,13 @@ class ExamDetailScreen extends ConsumerWidget {
   Color _topicStatusColor(TopicStatus status) {
     switch (status) {
       case TopicStatus.todo:
-        return Colors.grey;
+        return AppColors.lightTextTertiary;
       case TopicStatus.studying:
-        return Colors.amber;
+        return AppColors.warning;
       case TopicStatus.reviewed:
-        return Colors.blue;
+        return AppColors.info;
       case TopicStatus.mastered:
-        return Colors.green;
+        return AppColors.success;
     }
   }
 

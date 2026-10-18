@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../core/design_system/app_colors.dart';
 import '../core/design_system/app_radius.dart';
 import '../core/design_system/app_spacing.dart';
 import '../core/design_system/app_motion.dart';
-import '../core/design_system/components/blur_surface.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/calendar/presentation/calendar_screen.dart';
@@ -142,8 +143,6 @@ class _ScaffoldWithNavBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      // Keep page content above the navigation bar. Extending the body here
-      // placed the final rows/buttons underneath the floating navigation.
       extendBody: false,
       body: navigationShell,
       bottomNavigationBar: SafeArea(
@@ -155,14 +154,25 @@ class _ScaffoldWithNavBar extends StatelessWidget {
             AppSpacing.md,
             AppSpacing.sm,
           ),
-          child: BlurSurface(
-            blur: 24,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: isDark ? const Color(0xFF262A32) : const Color(0xFFE5E7EB),
-              width: 1,
+          child: Container(
+            decoration: ShapeDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  width: 1,
+                ),
+              ),
+              shadows: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Row(
               children: [
                 Expanded(
@@ -171,7 +181,10 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.dashboard_rounded,
                     label: 'Inicio',
                     isSelected: navigationShell.currentIndex == 0,
-                    onTap: () => navigationShell.goBranch(0),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(0);
+                    },
                   ),
                 ),
                 Expanded(
@@ -180,7 +193,10 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.calendar_month_rounded,
                     label: 'Agenda',
                     isSelected: navigationShell.currentIndex == 1,
-                    onTap: () => navigationShell.goBranch(1),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(1);
+                    },
                   ),
                 ),
                 Expanded(
@@ -189,7 +205,10 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.bookmark_rounded,
                     label: 'Materias',
                     isSelected: navigationShell.currentIndex == 2,
-                    onTap: () => navigationShell.goBranch(2),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(2);
+                    },
                   ),
                 ),
                 Expanded(
@@ -198,7 +217,10 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.grade_rounded,
                     label: 'Notas',
                     isSelected: navigationShell.currentIndex == 3,
-                    onTap: () => navigationShell.goBranch(3),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(3);
+                    },
                   ),
                 ),
                 Expanded(
@@ -207,7 +229,10 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.settings_rounded,
                     label: 'Ajustes',
                     isSelected: navigationShell.currentIndex == 4,
-                    onTap: () => navigationShell.goBranch(4),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(4);
+                    },
                   ),
                 ),
               ],
@@ -237,11 +262,11 @@ class _NavBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
     final color = isSelected
-        ? theme.colorScheme.primary
-        : (theme.brightness == Brightness.dark
-            ? const Color(0xFF9CA3AF)
-            : const Color(0xFF6B7280));
+        ? primary
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     return Semantics(
@@ -262,8 +287,13 @@ class _NavBarItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
             decoration: isSelected
                 ? ShapeDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    shape: AppRadius.continuousSm(),
+                    color: primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                    shape: AppRadius.continuousSm(
+                      side: BorderSide(
+                        color: primary.withValues(alpha: isDark ? 0.35 : 0.20),
+                        width: 1,
+                      ),
+                    ),
                   )
                 : null,
             child: Column(
@@ -296,7 +326,7 @@ class _NavBarItem extends StatelessWidget {
                     size: 21,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   label,
                   maxLines: 1,
