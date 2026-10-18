@@ -274,7 +274,7 @@ class ExamDetailScreen extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: topics.length,
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 ref.read(topicControllerProvider.notifier).reorderTopics(
                       List.of(topics),
                       oldIndex,
