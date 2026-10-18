@@ -18,6 +18,7 @@ import '../../grades/data/grade_repository.dart';
 import '../../grades/presentation/upsert_grade_sheet.dart';
 import '../data/subject_repository.dart';
 import '../domain/subject.dart';
+import '../domain/subject_icons.dart';
 import 'subject_controller.dart';
 import 'upsert_subject_sheet.dart';
 
@@ -156,7 +157,7 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
                                     shape: AppRadius.continuousMd(),
                                   ),
                                   child: Icon(
-                                    IconData(subject.iconCode, fontFamily: 'MaterialIcons'),
+                                    SubjectIcons.fromCodePoint(subject.iconCode),
                                     color: Colors.white,
                                     size: 24,
                                   ),
