@@ -12,6 +12,7 @@ import '../../../core/database/database_provider.dart';
 import '../../../core/services/backup_service.dart';
 import '../../../core/services/security_service.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../subjects/presentation/subject_form_preferences.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/presentation/avatar_view.dart';
 import '../../profile/presentation/edit_profile_sheet.dart';
@@ -239,6 +240,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final profileAsync = ref.watch(profileStreamProvider);
     final profile = profileAsync.value;
+    final subjectFormPreferences = ref.watch(subjectFormPreferencesProvider);
+    final subjectFormPreferencesController =
+        ref.read(subjectFormPreferencesProvider.notifier);
+
+    Widget subjectPreferenceTile({
+      required String title,
+      required String subtitle,
+      required bool value,
+      required ValueChanged<bool> onChanged,
+    }) {
+      return SwitchListTile.adaptive(
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        title: Text(title, style: AppTypography.titleSmall),
+        subtitle: Text(subtitle, style: AppTypography.caption),
+        value: value,
+        activeThumbColor: theme.colorScheme.primary,
+        activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.45),
+        onChanged: onChanged,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -351,6 +373,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (val) => ref
                       .read(profileControllerProvider.notifier)
                       .updateAppearance(reduceMotion: val),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Subject form preferences
+          Text('Personalización de materias', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Elegí qué opciones querés mostrar al crear o editar una materia. '
+                  'Los datos guardados no se borran al ocultar un campo.',
+                  style: AppTypography.caption,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                subjectPreferenceTile(
+                  title: 'Selector de color',
+                  subtitle: 'Mostrar los colores disponibles para cada materia',
+                  value: subjectFormPreferences.showColorPicker,
+                  onChanged: (value) => subjectFormPreferencesController.update(showColorPicker: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Selector de ícono',
+                  subtitle: 'Mostrar los íconos representativos',
+                  value: subjectFormPreferences.showIconPicker,
+                  onChanged: (value) => subjectFormPreferencesController.update(showIconPicker: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Código',
+                  subtitle: 'Código, abreviatura o identificador de la materia',
+                  value: subjectFormPreferences.showCodeField,
+                  onChanged: (value) => subjectFormPreferencesController.update(showCodeField: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Profesor',
+                  subtitle: 'Mostrar el campo de docente',
+                  value: subjectFormPreferences.showProfessorField,
+                  onChanged: (value) => subjectFormPreferencesController.update(showProfessorField: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Aula o lugar',
+                  subtitle: 'Mostrar dónde se cursa',
+                  value: subjectFormPreferences.showClassroomField,
+                  onChanged: (value) => subjectFormPreferencesController.update(showClassroomField: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Créditos',
+                  subtitle: 'Mostrar la cantidad de créditos',
+                  value: subjectFormPreferences.showCreditsField,
+                  onChanged: (value) => subjectFormPreferencesController.update(showCreditsField: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Estado académico',
+                  subtitle: 'Cursando, regular, aprobada, libre o recursando',
+                  value: subjectFormPreferences.showStatusSelector,
+                  onChanged: (value) => subjectFormPreferencesController.update(showStatusSelector: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Nota mínima para aprobar',
+                  subtitle: 'Mostrar el ajuste de la calificación mínima',
+                  value: subjectFormPreferences.showPassingGrade,
+                  onChanged: (value) => subjectFormPreferencesController.update(showPassingGrade: value),
+                ),
+                const Divider(height: 1),
+                subjectPreferenceTile(
+                  title: 'Notas y comentarios',
+                  subtitle: 'Mostrar el campo de observaciones de la materia',
+                  value: subjectFormPreferences.showNotesField,
+                  onChanged: (value) => subjectFormPreferencesController.update(showNotesField: value),
                 ),
               ],
             ),

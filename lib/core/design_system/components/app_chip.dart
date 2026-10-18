@@ -42,7 +42,9 @@ class AppChip extends StatelessWidget {
           );
 
     final chip = AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 160),
+      constraints: const BoxConstraints(minHeight: 44),
+      alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs + 2,

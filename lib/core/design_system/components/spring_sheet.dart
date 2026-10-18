@@ -6,7 +6,7 @@ import '../app_radius.dart';
 import '../app_spacing.dart';
 import '../app_typography.dart';
 
-/// Draggable, physics-based interruptible bottom sheet.
+/// A keyboard-aware, scrollable bottom sheet with a dedicated drag handle.
 class SpringSheet extends StatefulWidget {
   final Widget child;
   final String? title;
@@ -51,14 +51,12 @@ class _SpringSheetState extends State<SpringSheet>
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController.unbounded(
-      vsync: this,
-      value: 0.0,
-    );
+    _animController = AnimationController.unbounded(vsync: this, value: 0.0);
   }
 
   @override
   void dispose() {
+    _animController.removeListener(_onControllerTick);
     _animController.dispose();
     super.dispose();
   }
@@ -67,7 +65,6 @@ class _SpringSheetState extends State<SpringSheet>
     setState(() {
       _dragOffset += details.primaryDelta ?? 0;
       if (_dragOffset < 0) {
-        // Apply rubberband resistance upwards
         _dragOffset = -rubberband(_dragOffset.abs(), 300);
       }
     });
@@ -77,33 +74,28 @@ class _SpringSheetState extends State<SpringSheet>
     final velocity = details.primaryVelocity ?? 0.0;
     final projected = _dragOffset + project(velocity);
 
-    // If projected drag is down > 120px or velocity is high downwards, dismiss
     if (projected > 120 || velocity > 400) {
       Navigator.of(context).pop();
-    } else {
-      // Settle back to 0 using spring simulation
-      final simulation = SpringSimulation(
-        AppMotion.sheet,
-        _dragOffset,
-        0.0,
-        velocity,
-      );
-      _animController.animateWith(simulation).whenComplete(() {
-        setState(() {
-          _dragOffset = 0.0;
-        });
-      });
-      _animController.addListener(_onControllerTick);
+      return;
     }
+
+    final simulation = SpringSimulation(AppMotion.sheet, _dragOffset, 0.0, velocity);
+    _animController
+      ..stop()
+      ..value = _dragOffset
+      ..removeListener(_onControllerTick)
+      ..addListener(_onControllerTick);
+
+    _animController.animateWith(simulation).whenComplete(() {
+      _animController.removeListener(_onControllerTick);
+      if (!mounted) return;
+      setState(() => _dragOffset = 0.0);
+    });
   }
 
   void _onControllerTick() {
-    setState(() {
-      _dragOffset = _animController.value;
-    });
-    if (_animController.isCompleted) {
-      _animController.removeListener(_onControllerTick);
-    }
+    if (!mounted) return;
+    setState(() => _dragOffset = _animController.value);
   }
 
   @override
@@ -111,96 +103,115 @@ class _SpringSheetState extends State<SpringSheet>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final mediaQuery = MediaQuery.of(context);
-    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
-
     final bg = isDark ? const Color(0xFF181B20) : Colors.white;
+    final shape = AppRadius.continuousXl();
 
-    // ModalBottomSheet already moves above the keyboard. Avoid applying the
-    // keyboard inset a second time, which used to push the sheet's CTA offscreen.
-    return Transform.translate(
-        offset: Offset(0, _dragOffset),
-        child: GestureDetector(
-          onVerticalDragUpdate: _onVerticalDragUpdate,
-          onVerticalDragEnd: _onVerticalDragEnd,
+    // The modal route already removes the keyboard inset from its constraints.
+    // Use those live constraints instead of subtracting viewInsets a second time.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : mediaQuery.size.height;
+
+        return Transform.translate(
+          offset: Offset(0, _dragOffset),
           child: Container(
-            constraints: BoxConstraints(
-              maxHeight: availableHeight * 0.92,
-            ),
+            constraints: BoxConstraints(maxHeight: availableHeight * 0.96),
             decoration: ShapeDecoration(
               color: bg,
-              shape: AppRadius.continuousXl(),
+              shape: shape,
               shadows: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 20,
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 24,
                   offset: const Offset(0, -6),
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: AppSpacing.sm),
-                // Handle indicator
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFD1D5DB),
-                      borderRadius: BorderRadius.circular(2),
+            child: ClipPath(
+              clipper: ShapeBorderClipper(shape: shape),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: AppSpacing.xs),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: _onVerticalDragUpdate,
+                    onVerticalDragEnd: _onVerticalDragEnd,
+                    child: SizedBox(
+                      width: 88,
+                      height: 32,
+                      child: Center(
+                        child: Container(
+                          width: 38,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF4B5563)
+                                : const Color(0xFFD1D5DB),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                if (widget.title != null || widget.trailing != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xl,
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (widget.title != null)
-                          Text(
-                            widget.title!,
-                            style: AppTypography.titleMedium.copyWith(
-                              color: isDark ? Colors.white : const Color(0xFF111827),
+                  if (widget.title != null || widget.trailing != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.xl,
+                        AppSpacing.sm,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          if (widget.title != null)
+                            Expanded(
+                              child: Text(
+                                widget.title!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: isDark ? Colors.white : const Color(0xFF111827),
+                                ),
+                              ),
                             ),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                        if (widget.trailing != null) widget.trailing!,
-                      ],
+                          if (widget.trailing != null) ...[
+                            if (widget.title != null)
+                              const SizedBox(width: AppSpacing.sm),
+                            widget.trailing!,
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: isDark
-                        ? const Color(0xFF262A32)
-                        : const Color(0xFFF3F4F6),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? const Color(0xFF262A32)
+                          : const Color(0xFFF3F4F6),
+                    ),
+                  ],
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpacing.xl,
+                        AppSpacing.xl,
+                        AppSpacing.xl,
+                        AppSpacing.lg + mediaQuery.padding.bottom,
+                      ),
+                      child: widget.child,
+                    ),
                   ),
                 ],
-                Flexible(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      AppSpacing.xl,
-                      AppSpacing.xl,
-                      AppSpacing.xl + 8,
-                    ),
-                    child: widget.child,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        );
+      },
     );
   }
 }

@@ -81,6 +81,7 @@ class AppTextField extends StatelessWidget {
             onChanged: onChanged,
             onSubmitted: onSubmitted,
             maxLines: maxLines,
+            scrollPadding: const EdgeInsets.fromLTRB(0, 24, 0, 120),
             autofocus: autofocus,
             enabled: enabled,
             style: AppTypography.bodyMedium.copyWith(

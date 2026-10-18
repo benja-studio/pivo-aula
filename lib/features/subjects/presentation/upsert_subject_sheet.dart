@@ -13,6 +13,7 @@ import '../../profile/data/profile_repository.dart';
 import '../domain/subject.dart';
 import '../domain/subject_icons.dart';
 import 'subject_controller.dart';
+import 'subject_form_preferences.dart';
 
 class UpsertSubjectSheet extends ConsumerStatefulWidget {
   final Subject? subjectToEdit;
@@ -122,6 +123,7 @@ class _UpsertSubjectSheetState extends ConsumerState<UpsertSubjectSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final preferences = ref.watch(subjectFormPreferencesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,164 +142,241 @@ class _UpsertSubjectSheetState extends ConsumerState<UpsertSubjectSheet> {
           },
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: AppTextField(
-                controller: _codeController,
-                label: AppStrings.subjectCode,
-                hint: 'Ej. AED-301',
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: AppTextField(
-                controller: _creditsController,
-                label: AppStrings.credits,
-                hint: 'Ej. 6',
-                keyboardType: TextInputType.number,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: AppTextField(
-                controller: _professorController,
-                label: AppStrings.professor,
-                hint: 'Ej. Ing. Rossi',
-                prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: AppTextField(
-                controller: _classroomController,
-                label: AppStrings.classroom,
-                hint: 'Ej. Aula 402 / Virtual',
-                prefixIcon: const Icon(Icons.room_outlined, size: 20),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // Color Picker
-        Text('Color de la materia', style: AppTypography.titleSmall),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: AppColors.subjectColors.map((c) {
-            final isSelected = c.toARGB32() == _selectedColor;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedColor = c.toARGB32()),
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: c,
-                  shape: BoxShape.circle,
-                  border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
-                  boxShadow: [
-                    if (isSelected)
-                      BoxShadow(
-                        color: c.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
+        if (preferences.showCodeField && preferences.showCreditsField)
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  controller: _codeController,
+                  label: AppStrings.subjectCode,
+                  hint: 'Ej. AED-301',
                 ),
-                child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
               ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: AppSpacing.lg),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppTextField(
+                  controller: _creditsController,
+                  label: AppStrings.credits,
+                  hint: 'Ej. 6',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          )
+        else if (preferences.showCodeField)
+          AppTextField(
+            controller: _codeController,
+            label: AppStrings.subjectCode,
+            hint: 'Ej. AED-301',
+          )
+        else if (preferences.showCreditsField)
+          AppTextField(
+            controller: _creditsController,
+            label: AppStrings.credits,
+            hint: 'Ej. 6',
+            keyboardType: TextInputType.number,
+          ),
+        if (preferences.showCodeField || preferences.showCreditsField)
+          const SizedBox(height: AppSpacing.md),
+        if (preferences.showProfessorField && preferences.showClassroomField)
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  controller: _professorController,
+                  label: AppStrings.professor,
+                  hint: 'Ej. Ing. Rossi',
+                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppTextField(
+                  controller: _classroomController,
+                  label: AppStrings.classroom,
+                  hint: 'Ej. Aula 402 / Virtual',
+                  prefixIcon: const Icon(Icons.room_outlined, size: 20),
+                ),
+              ),
+            ],
+          )
+        else if (preferences.showProfessorField)
+          AppTextField(
+            controller: _professorController,
+            label: AppStrings.professor,
+            hint: 'Ej. Ing. Rossi',
+            prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
+          )
+        else if (preferences.showClassroomField)
+          AppTextField(
+            controller: _classroomController,
+            label: AppStrings.classroom,
+            hint: 'Ej. Aula 402 / Virtual',
+            prefixIcon: const Icon(Icons.room_outlined, size: 20),
+          ),
+        if (preferences.showProfessorField || preferences.showClassroomField)
+          const SizedBox(height: AppSpacing.lg),
 
-        // Icon Picker
-        Text('Ícono representativo', style: AppTypography.titleSmall),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: SubjectIcons.available.map((icon) {
-            final isSelected = icon.codePoint == _selectedIcon;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedIcon = icon.codePoint),
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: ShapeDecoration(
-                  color: isSelected
-                      ? Color(_selectedColor).withValues(alpha: isDark ? 0.3 : 0.15)
-                      : (isDark ? const Color(0xFF22262E) : const Color(0xFFF3F4F6)),
-                  shape: AppRadius.continuousSm(
-                    side: isSelected
-                        ? BorderSide(color: Color(_selectedColor), width: 1.5)
-                        : BorderSide.none,
+        if (preferences.showColorPicker) ...[
+          Text('Color de la materia', style: AppTypography.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: AppColors.subjectColors.map((color) {
+              final isSelected = color.toARGB32() == _selectedColor;
+              return Semantics(
+                button: true,
+                selected: isSelected,
+                label: 'Seleccionar color de materia',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _selectedColor = color.toARGB32()),
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        width: isSelected ? 42 : 36,
+                        height: isSelected ? 42 : 36,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? (isDark ? Colors.white : const Color(0xFF111827))
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                          ],
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check_rounded, color: Colors.white, size: 19)
+                            : null,
+                      ),
+                    ),
                   ),
                 ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isSelected ? Color(_selectedColor) : Colors.grey,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+
+        if (preferences.showIconPicker) ...[
+          Text('Ícono representativo', style: AppTypography.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: SubjectIcons.available.map((icon) {
+              final isSelected = icon.codePoint == _selectedIcon;
+              return Semantics(
+                button: true,
+                selected: isSelected,
+                label: isSelected ? 'Ícono seleccionado' : 'Seleccionar ícono',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _selectedIcon = icon.codePoint),
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        width: 44,
+                        height: 44,
+                        decoration: ShapeDecoration(
+                          color: isSelected
+                              ? Color(_selectedColor).withValues(alpha: isDark ? 0.3 : 0.12)
+                              : (isDark ? const Color(0xFF22262E) : const Color(0xFFF3F4F6)),
+                          shape: AppRadius.continuousSm(
+                            side: isSelected
+                                ? BorderSide(color: Color(_selectedColor), width: 1.6)
+                                : BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF343A46)
+                                        : const Color(0xFFE5E7EB),
+                                  ),
+                          ),
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 21,
+                          color: isSelected ? Color(_selectedColor) : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+
+        if (preferences.showStatusSelector) ...[
+          Text(AppStrings.status, style: AppTypography.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: SubjectStatus.values.map((status) {
+              final isSelected = status == _selectedStatus;
+              return AppChip(
+                label: status.label,
+                isSelected: isSelected,
+                activeColor: Color(_selectedColor),
+                onTap: () => setState(() => _selectedStatus = status),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        if (preferences.showPassingGrade) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(AppStrings.passingGrade, style: AppTypography.titleSmall),
+              Text(
+                _passingGrade.toStringAsFixed(1),
+                style: AppTypography.titleMedium.copyWith(
+                  color: Color(_selectedColor),
                 ),
               ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
+          Slider(
+            value: _passingGrade,
+            min: 1,
+            max: 10,
+            divisions: 18,
+            activeColor: Color(_selectedColor),
+            onChanged: (value) => setState(() => _passingGrade = value),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
-        // Status Selection
-        Text(AppStrings.status, style: AppTypography.titleSmall),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: SubjectStatus.values.map((st) {
-            final isSelected = st == _selectedStatus;
-            return AppChip(
-              label: st.label,
-              isSelected: isSelected,
-              activeColor: Color(_selectedColor),
-              onTap: () => setState(() => _selectedStatus = st),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // Passing Grade
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(AppStrings.passingGrade, style: AppTypography.titleSmall),
-            Text(
-              _passingGrade.toStringAsFixed(1),
-              style: AppTypography.titleMedium.copyWith(
-                color: Color(_selectedColor),
-              ),
-            ),
-          ],
-        ),
-        Slider(
-          value: _passingGrade,
-          min: 1,
-          max: 10,
-          divisions: 18,
-          activeColor: Color(_selectedColor),
-          onChanged: (val) => setState(() => _passingGrade = val),
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        AppTextField(
-          controller: _notesController,
-          label: 'Notas o comentarios',
-          hint: 'Ej. Criterio de promoción: 2 parciales con 7 o más...',
-          maxLines: 3,
-        ),
-        const SizedBox(height: AppSpacing.xl),
+        if (preferences.showNotesField)
+          AppTextField(
+            controller: _notesController,
+            label: 'Notas o comentarios',
+            hint: 'Ej. Criterio de promoción: 2 parciales con 7 o más...',
+            maxLines: 3,
+          ),
+        if (preferences.showNotesField)
+          const SizedBox(height: AppSpacing.xl)
+        else
+          const SizedBox(height: AppSpacing.md),
 
         AppButton(
           label: widget.subjectToEdit == null ? 'Crear materia' : AppStrings.save,
