@@ -222,7 +222,7 @@ class _UpsertSubjectSheetState extends ConsumerState<UpsertSubjectSheet> {
         const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: _availableIcons.map((icon) {
+          children: SubjectIcons.available.map((icon) {
             final isSelected = icon.codePoint == _selectedIcon;
             return GestureDetector(
               onTap: () => setState(() => _selectedIcon = icon.codePoint),
