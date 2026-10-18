@@ -114,7 +114,9 @@ class SubjectFormPreferencesController
     bool? showStatusSelector,
     bool? showPassingGrade,
     bool? showNotesField,
-  }) {
+  }) async {
+    // Wait for stored values first so a quick toggle cannot reset other options.
+    await _ready;
     _hasLocalChanges = true;
     state = state.copyWith(
       showColorPicker: showColorPicker,
@@ -145,7 +147,7 @@ class SubjectFormPreferencesController
         prefs.setBool(SubjectFormPreferences.showNotesFieldKey, snapshot.showNotesField),
       ]);
     });
-    return _pendingSave;
+    await _pendingSave;
   }
 }
 
