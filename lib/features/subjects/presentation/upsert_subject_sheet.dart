@@ -11,6 +11,7 @@ import '../../../core/design_system/components/spring_sheet.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../profile/data/profile_repository.dart';
 import '../domain/subject.dart';
+import '../domain/subject_icons.dart';
 import 'subject_controller.dart';
 
 class UpsertSubjectSheet extends ConsumerStatefulWidget {
@@ -44,17 +45,6 @@ class _UpsertSubjectSheetState extends ConsumerState<UpsertSubjectSheet> {
   late double _passingGrade;
   String? _nameError;
 
-  static const List<IconData> _availableIcons = [
-    Icons.book_rounded,
-    Icons.calculate_rounded,
-    Icons.science_rounded,
-    Icons.computer_rounded,
-    Icons.language_rounded,
-    Icons.architecture_rounded,
-    Icons.psychology_rounded,
-    Icons.draw_rounded,
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -67,7 +57,7 @@ class _UpsertSubjectSheetState extends ConsumerState<UpsertSubjectSheet> {
     _notesController = TextEditingController(text: s?.notes ?? '');
 
     _selectedColor = s?.colorValue ?? AppColors.subjectColors.first.toARGB32();
-    _selectedIcon = s?.iconCode ?? _availableIcons.first.codePoint;
+    _selectedIcon = s?.iconCode ?? SubjectIcons.available.first.codePoint;
     _selectedStatus = s?.status ?? SubjectStatus.enrolled;
     _passingGrade = s?.passingGrade ?? 4.0;
   }
