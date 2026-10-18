@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/design_system/app_radius.dart';
 import '../core/design_system/app_spacing.dart';
+import '../core/design_system/app_motion.dart';
 import '../core/design_system/components/blur_surface.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -22,24 +23,26 @@ GoRouter createRouter({required bool hasProfile}) {
     routes: [
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) =>
+            _animatedPage(context, state, const OnboardingScreen()),
       ),
       GoRoute(
         path: '/search',
-        builder: (context, state) => const GlobalSearchScreen(),
+        pageBuilder: (context, state) =>
+            _animatedPage(context, state, const GlobalSearchScreen()),
       ),
       GoRoute(
         path: '/subjects/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return SubjectDetailScreen(subjectId: id);
+          return _animatedPage(context, state, SubjectDetailScreen(subjectId: id));
         },
       ),
       GoRoute(
         path: '/exams/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ExamDetailScreen(examId: id);
+          return _animatedPage(context, state, ExamDetailScreen(examId: id));
         },
       ),
       StatefulShellRoute.indexedStack(
@@ -90,6 +93,41 @@ GoRouter createRouter({required bool hasProfile}) {
         ],
       ),
     ],
+  );
+}
+
+CustomTransitionPage<void> _animatedPage(
+  BuildContext context,
+  GoRouterState state,
+  Widget child,
+) {
+  final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration:
+        reduceMotion ? Duration.zero : AppMotion.routeDuration,
+    reverseTransitionDuration:
+        reduceMotion ? Duration.zero : AppMotion.routeReverseDuration,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      final slide = Tween<Offset>(
+        begin: const Offset(0, 0.025),
+        end: Offset.zero,
+      ).animate(curved);
+
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: slide,
+          child: child,
+        ),
+      );
+    },
   );
 }
 
@@ -204,6 +242,7 @@ class _NavBarItem extends StatelessWidget {
         : (theme.brightness == Brightness.dark
             ? const Color(0xFF9CA3AF)
             : const Color(0xFF6B7280));
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     return Semantics(
       button: true,
@@ -215,7 +254,10 @@ class _NavBarItem extends StatelessWidget {
           onTap: onTap,
           customBorder: AppRadius.continuousSm(),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: reduceMotion
+                ? Duration.zero
+                : AppMotion.selectionDuration,
+            curve: Curves.easeOutCubic,
             constraints: const BoxConstraints(minHeight: 48),
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
             decoration: isSelected
@@ -228,7 +270,32 @@ class _NavBarItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(isSelected ? activeIcon : icon, color: color, size: 21),
+                AnimatedSwitcher(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : AppMotion.iconSwitchDuration,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final scale = Tween<double>(
+                      begin: 0.78,
+                      end: 1.0,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ));
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: scale, child: child),
+                    );
+                  },
+                  child: Icon(
+                    key: ValueKey<bool>(isSelected),
+                    isSelected ? activeIcon : icon,
+                    color: color,
+                    size: 21,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   label,

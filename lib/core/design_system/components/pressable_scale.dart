@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import '../app_motion.dart';
 
-/// Instant touch-down responsive widget mimicking Apple HIG physics.
-/// Compresses to [pressedScale] (default ~0.97) immediately on pointer down,
-/// cancels with ~12px drag hysteresis, and releases with a spring simulation.
+/// Tactile interaction wrapper with spring feedback.
+///
+/// Uses the gesture arena instead of raw pointer-up callbacks, so a drag that
+/// starts on a card can scroll normally and a long press never also fires a tap.
 class PressableScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -30,9 +31,6 @@ class PressableScale extends StatefulWidget {
 class _PressableScaleState extends State<PressableScale>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  Offset? _pointerDownPosition;
-  bool _isPressed = false;
-  static const double _hysteresisPx = 12.0;
 
   @override
   void initState() {
@@ -49,75 +47,68 @@ class _PressableScaleState extends State<PressableScale>
     super.dispose();
   }
 
-  void _onPointerDown(PointerDownEvent event) {
-    if (widget.onTap == null && widget.onLongPress == null) return;
-    _pointerDownPosition = event.position;
-    _isPressed = true;
-    _animateTo(widget.pressedScale);
-  }
-
-  void _onPointerMove(PointerMoveEvent event) {
-    if (!_isPressed || _pointerDownPosition == null) return;
-    final delta = (event.position - _pointerDownPosition!).distance;
-    if (delta > _hysteresisPx) {
-      _isPressed = false;
-      _animateTo(1.0);
-    }
-  }
-
-  void _onPointerUp(PointerUpEvent event) {
-    if (_isPressed) {
-      _isPressed = false;
-      _animateTo(1.0);
-      widget.onTap?.call();
-    }
-  }
-
-  void _onPointerCancel(PointerCancelEvent event) {
-    if (_isPressed) {
-      _isPressed = false;
-      _animateTo(1.0);
-    }
-  }
-
   void _animateTo(double target) {
-    final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final disableAnimations =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (disableAnimations) {
       _controller.value = target;
       return;
     }
 
-    final simulation = SpringSimulation(
-      AppMotion.defaultUi,
-      _controller.value,
-      target,
-      0.0,
+    _controller.animateWith(
+      SpringSimulation(
+        AppMotion.defaultUi,
+        _controller.value,
+        target,
+        0.0,
+      ),
     );
-    _controller.animateWith(simulation);
   }
+
+  void _release() => _animateTo(1.0);
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
+    final canPress = widget.onTap != null || widget.onLongPress != null;
+
+    return GestureDetector(
       behavior: widget.behavior,
-      onPointerDown: _onPointerDown,
-      onPointerMove: _onPointerMove,
-      onPointerUp: _onPointerUp,
-      onPointerCancel: _onPointerCancel,
-      child: GestureDetector(
-        onLongPress: widget.onLongPress,
-        behavior: widget.behavior,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final scale = _controller.value.clamp(0.85, 1.05);
-            return Transform.scale(
+      onTapDown: canPress ? (_) => _animateTo(widget.pressedScale) : null,
+      onTapUp: canPress ? (_) => _release() : null,
+      onTapCancel: canPress ? _release : null,
+      onTap: widget.onTap,
+      onLongPressStart: widget.onLongPress == null
+          ? null
+          : (_) => _animateTo(widget.pressedScale),
+      onLongPressEnd: widget.onLongPress == null
+          ? null
+          : (_) {
+              _release();
+              widget.onLongPress?.call();
+            },
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final scale = _controller.value.clamp(0.85, 1.05).toDouble();
+          final pressRange = 1.0 - widget.pressedScale;
+          final pressProgress = pressRange <= 0
+              ? 0.0
+              : ((1.0 - scale) / pressRange).clamp(0.0, 1.0).toDouble();
+          final idleOpacity = 1.0;
+          final targetOpacity = widget.pressedOpacity.clamp(0.0, 1.0);
+          final opacity = idleOpacity -
+              ((idleOpacity - targetOpacity) * pressProgress);
+
+          return Opacity(
+            opacity: opacity.clamp(0.0, 1.0).toDouble(),
+            child: Transform.scale(
               scale: scale,
+              alignment: Alignment.center,
               child: child,
-            );
-          },
-          child: widget.child,
-        ),
+            ),
+          );
+        },
+        child: widget.child,
       ),
     );
   }

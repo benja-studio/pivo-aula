@@ -4,16 +4,16 @@ import '../utils/spring_helpers.dart';
 class AppMotion {
   AppMotion._();
 
-  /// Default UI spring: critically damped, no bounce.
+  /// Responsive press/release spring: quick feedback with a restrained settle.
   static final SpringDescription defaultUi = springFrom(
-    dampingRatio: 1.0,
-    response: 0.38,
+    dampingRatio: 0.88,
+    response: 0.26,
   );
 
   /// Interactive rotation / shape change spring.
   static final SpringDescription shapeChange = springFrom(
-    dampingRatio: 0.8,
-    response: 0.4,
+    dampingRatio: 0.82,
+    response: 0.34,
   );
 
   /// Sheets and drawers settlement after drag gesture.
@@ -28,7 +28,13 @@ class AppMotion {
     response: 0.36,
   );
 
-  /// Fallback durations for reduced motion
+  /// Page and navigation micro-interactions.
+  static const Duration routeDuration = Duration(milliseconds: 280);
+  static const Duration routeReverseDuration = Duration(milliseconds: 200);
+  static const Duration iconSwitchDuration = Duration(milliseconds: 180);
+  static const Duration selectionDuration = Duration(milliseconds: 220);
+
+  /// Fallback durations for reduced motion.
   static const Duration fastFade = Duration(milliseconds: 150);
   static const Duration normalFade = Duration(milliseconds: 250);
 }
