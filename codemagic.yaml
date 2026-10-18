@@ -1,6 +1,6 @@
 workflows:
   pivote-android:
-    name: Pivote - Android APK
+    name: Pivo - Aula - Android APK
 
     max_build_duration: 60
 
