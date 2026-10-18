@@ -56,7 +56,7 @@ class AcademicUnitAutocompleteField extends StatelessWidget {
             elevation: 10,
             color: isDark ? const Color(0xFF20242C) : Colors.white,
             clipBehavior: Clip.antiAlias,
-            borderRadius: BorderRadius.circular(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
               child: ListView.separated(

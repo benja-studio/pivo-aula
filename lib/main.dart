@@ -4,6 +4,7 @@ import 'app/app.dart';
 import 'core/database/app_database.dart';
 import 'core/database/database_provider.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/backup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,9 @@ void main() async {
   final db = AppDatabase();
   final profile = await db.getProfile();
   final hasProfile = profile != null;
+  if (hasProfile) {
+    await BackupService(db).performAutoBackup();
+  }
 
   runApp(
     ProviderScope(

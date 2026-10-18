@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
@@ -29,6 +30,9 @@ class BackupService {
       final dbFile = File(p.join(docs.path, 'aula_local.sqlite'));
       if (!dbFile.existsSync()) return;
 
+      // Flush committed WAL pages into the main database before copying it.
+      await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final targetFile = File(p.join(backupDir.path, 'backup_$timestamp.sqlite'));
       await dbFile.copy(targetFile.path);
@@ -49,6 +53,86 @@ class BackupService {
         }
       }
     } catch (_) {}
+  }
+
+
+  /// Returns recoverable on-device snapshots, newest first.
+  Future<List<File>> listLocalBackups() async {
+    final docs = await getApplicationDocumentsDirectory();
+    final backupDir = Directory(p.join(docs.path, 'backups_local'));
+    if (!await backupDir.exists()) return const <File>[];
+
+    final backups = backupDir
+        .listSync()
+        .whereType<File>()
+        .where((file) => p.basename(file.path).startsWith('backup_') &&
+            file.path.toLowerCase().endsWith('.sqlite'))
+        .toList()
+      ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    return backups;
+  }
+
+  /// Reads a backup's manifest without touching the current database.
+  Future<bool> backupRequiresPassword(String filePath) async {
+    final bytes = await File(filePath).readAsBytes();
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final manifestFile = archive.findFile('manifest.json');
+    if (manifestFile == null) {
+      throw Exception('El archivo de respaldo no es válido (falta manifest).');
+    }
+    final manifest = jsonDecode(
+      utf8.decode(manifestFile.content as List<int>),
+    ) as Map<String, dynamic>;
+    return manifest['isEncrypted'] as bool? ?? false;
+  }
+
+  /// Restores a local SQLite snapshot only after validating and reading it.
+  Future<void> restoreLocalBackup(String filePath) async {
+    final sourceFile = File(filePath);
+    if (!await sourceFile.exists()) {
+      throw Exception('La copia local ya no está disponible.');
+    }
+
+    final snapshotDb = AppDatabase(
+      NativeDatabase.createInBackground(
+        sourceFile,
+        setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+      ),
+    );
+    try {
+      if (!await snapshotDb.checkIntegrity()) {
+        throw Exception('La copia local está dañada y no se puede restaurar.');
+      }
+      final profile = await snapshotDb.getProfile();
+      final subjects = await snapshotDb.watchSubjects(includeDeleted: true).first;
+      final exams = await snapshotDb.watchExams(includeDeleted: true).first;
+      final topics = await snapshotDb.watchAllTopics().first;
+      final grades = await snapshotDb.watchAllGrades().first;
+
+      if (profile == null && subjects.isEmpty && exams.isEmpty &&
+          topics.isEmpty && grades.isEmpty) {
+        throw Exception('La copia local no contiene datos para recuperar.');
+      }
+
+      await _db.transaction(() async {
+        await _db.clearAllData();
+        if (profile != null) await _db.saveProfile(profile);
+        for (final subject in subjects) {
+          await _db.upsertSubject(subject);
+        }
+        for (final exam in exams) {
+          await _db.upsertExam(exam);
+        }
+        for (final topic in topics) {
+          await _db.upsertTopic(topic);
+        }
+        for (final grade in grades) {
+          await _db.upsertGrade(grade);
+        }
+      });
+    } finally {
+      await snapshotDb.close();
+    }
   }
 
   /// Layer 2 & 3: Export full data to versioned zip with manifest, SHA-256 and optional AES-GCM password.
@@ -181,49 +265,49 @@ class BackupService {
 
     final data = jsonDecode(utf8.decode(rawDataBytes)) as Map<String, dynamic>;
 
-    // Restore Photo if present
-    String? restoredPhotoPath;
+    // Decode and validate every record before touching the current database.
+    var restoredProfile = data['profile'] == null
+        ? null
+        : StudentProfile.fromJson(data['profile'] as Map<String, dynamic>);
+    final restoredSubjects = (data['subjects'] as List? ?? const [])
+        .map((item) => Subject.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+    final restoredExams = (data['exams'] as List? ?? const [])
+        .map((item) => Exam.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+    final restoredTopics = (data['topics'] as List? ?? const [])
+        .map((item) => Topic.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+    final restoredGrades = (data['grades'] as List? ?? const [])
+        .map((item) => GradeEntry.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+
+    // Save any photo first; redirect the restored profile to the new path.
     final photoArchive = archive.files.where((f) => f.name.startsWith('photo')).firstOrNull;
     if (photoArchive != null) {
       final docs = await getApplicationDocumentsDirectory();
-      final photoTarget = File(p.join(docs.path, 'restored_${photoArchive.name}'));
+      final photoTarget = File(p.join(docs.path, 'restored_' + photoArchive.name));
       await photoTarget.writeAsBytes(photoArchive.content as List<int>);
-      restoredPhotoPath = photoTarget.path;
-    }
-
-    // Atomic Restore Transaction
-    await _db.clearAllData();
-
-    if (data['profile'] != null) {
-      var profile = StudentProfile.fromJson(data['profile'] as Map<String, dynamic>);
-      if (restoredPhotoPath != null) {
-        profile = profile.copyWith(photoPath: restoredPhotoPath);
-      }
-      await _db.saveProfile(profile);
-    }
-
-    if (data['subjects'] != null) {
-      for (final s in (data['subjects'] as List)) {
-        await _db.upsertSubject(Subject.fromJson(s as Map<String, dynamic>));
+      if (restoredProfile != null) {
+        restoredProfile = restoredProfile!.copyWith(photoPath: photoTarget.path);
       }
     }
 
-    if (data['exams'] != null) {
-      for (final e in (data['exams'] as List)) {
-        await _db.upsertExam(Exam.fromJson(e as Map<String, dynamic>));
+    await _db.transaction(() async {
+      await _db.clearAllData();
+      if (restoredProfile != null) await _db.saveProfile(restoredProfile!);
+      for (final subject in restoredSubjects) {
+        await _db.upsertSubject(subject);
       }
-    }
-
-    if (data['topics'] != null) {
-      for (final t in (data['topics'] as List)) {
-        await _db.upsertTopic(Topic.fromJson(t as Map<String, dynamic>));
+      for (final exam in restoredExams) {
+        await _db.upsertExam(exam);
       }
-    }
-
-    if (data['grades'] != null) {
-      for (final g in (data['grades'] as List)) {
-        await _db.upsertGrade(GradeEntry.fromJson(g as Map<String, dynamic>));
+      for (final topic in restoredTopics) {
+        await _db.upsertTopic(topic);
       }
-    }
+      for (final grade in restoredGrades) {
+        await _db.upsertGrade(grade);
+      }
+    });
   }
 }

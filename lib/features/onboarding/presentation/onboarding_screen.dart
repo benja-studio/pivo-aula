@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/database/database_provider.dart';
+import '../../../core/services/backup_service.dart';
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_radius.dart';
 import '../../../core/design_system/app_spacing.dart';
@@ -10,6 +14,7 @@ import '../../../core/design_system/components/app_button.dart';
 import '../../../core/design_system/components/app_text_field.dart';
 import '../../../core/design_system/components/app_chip.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../profile/presentation/academic_unit_autocomplete_field.dart';
 import '../../profile/presentation/avatar_view.dart';
 import '../../profile/presentation/profile_controller.dart';
 
@@ -23,6 +28,8 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isRestoringBackup = false;
+  List<File> _localBackups = const [];
 
   // Form Fields
   final _nameController = TextEditingController();
@@ -44,6 +51,177 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _nameError;
   String? _careerError;
   String? _universityError;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshLocalBackups();
+  }
+
+  Future<void> _refreshLocalBackups() async {
+    try {
+      final backups = await BackupService(ref.read(appDatabaseProvider)).listLocalBackups();
+      if (mounted) setState(() => _localBackups = backups);
+    } catch (_) {
+      if (mounted) setState(() => _localBackups = const []);
+    }
+  }
+
+  String _localBackupDate(File file) {
+    final date = file.lastModifiedSync();
+    String twoDigits(int value) => value.toString().padLeft(2, '0');
+    return twoDigits(date.day) + '/' + twoDigits(date.month) + '/' +
+        date.year.toString() + ' · ' + twoDigits(date.hour) + ':' +
+        twoDigits(date.minute);
+  }
+
+  Future<String?> _askBackupPassword() async {
+    final controller = TextEditingController();
+    final password = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Respaldo protegido'),
+        content: AppTextField(
+          controller: controller,
+          label: 'Contraseña del respaldo',
+          hint: 'Ingresá la contraseña usada al exportar',
+          obscureText: true,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: const Text('Desbloquear'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (password == null) return null;
+    if (password.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ingresá la contraseña para abrir este respaldo.')),
+        );
+      }
+      return null;
+    }
+    return password;
+  }
+
+  Future<void> _restoreBackupFile() async {
+    if (_isRestoringBackup) return;
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['aula'],
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.single.path;
+      if (path == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo acceder al archivo seleccionado.')),
+          );
+        }
+        return;
+      }
+
+      setState(() => _isRestoringBackup = true);
+      final service = BackupService(ref.read(appDatabaseProvider));
+      final encrypted = await service.backupRequiresPassword(path);
+      final password = encrypted ? await _askBackupPassword() : null;
+      if (encrypted && password == null) return;
+      await service.restoreBackup(path, password: password);
+      await _finishRestoreFlow();
+    } catch (error) {
+      if (mounted) {
+        final message = error.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo restaurar el respaldo: ' + message)),
+        );
+      }
+    } finally {
+      if (mounted && _isRestoringBackup) setState(() => _isRestoringBackup = false);
+    }
+  }
+
+  Future<void> _restoreLocalSnapshot() async {
+    if (_isRestoringBackup || _localBackups.isEmpty) return;
+    final selected = await showDialog<File>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Copias guardadas en este dispositivo'),
+        content: SizedBox(
+          width: 360,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 320),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _localBackups.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final file = _localBackups[index];
+                final size = file.lengthSync();
+                final sizeLabel = size > 1024 * 1024
+                    ? (size / (1024 * 1024)).toStringAsFixed(1) + ' MB'
+                    : (size / 1024).toStringAsFixed(0) + ' KB';
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.history_rounded),
+                  title: Text(_localBackupDate(file)),
+                  subtitle: Text(sizeLabel + ' · Copia local'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.of(ctx).pop(file),
+                );
+              },
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancelar')),
+        ],
+      ),
+    );
+    if (selected == null || !mounted) return;
+
+    setState(() => _isRestoringBackup = true);
+    try {
+      await BackupService(ref.read(appDatabaseProvider)).restoreLocalBackup(selected.path);
+      await _finishRestoreFlow();
+    } catch (error) {
+      if (mounted) {
+        final message = error.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo recuperar la copia local: ' + message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRestoringBackup = false);
+    }
+  }
+
+  Future<void> _finishRestoreFlow() async {
+    final profile = await ref.read(appDatabaseProvider).getProfile();
+    if (!mounted) return;
+    if (profile != null) {
+      context.go('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Los datos se recuperaron. Completá el perfil para seguir; tus materias y notas se conservaron.'),
+          duration: Duration(seconds: 5),
+        ),
+      );
+      await _refreshLocalBackups();
+    }
+  }
 
   @override
   void dispose() {
@@ -210,11 +388,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             // Bottom Action
             Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
-              child: AppButton(
-                label: _currentPage == 3 ? AppStrings.finishBtn : AppStrings.continueBtn,
-                onPressed: _nextPage,
-                isExpanded: true,
-                height: 52,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton(
+                    label: _currentPage == 3 ? AppStrings.finishBtn : AppStrings.continueBtn,
+                    onPressed: _isRestoringBackup ? null : _nextPage,
+                    isExpanded: true,
+                    height: 52,
+                  ),
+                  if (_currentPage == 0) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    TextButton.icon(
+                      onPressed: _isRestoringBackup ? null : _restoreBackupFile,
+                      icon: _isRestoringBackup
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.folder_open_rounded, size: 18),
+                      label: Text(_isRestoringBackup ? 'Restaurando respaldo…' : 'Ya uso Aula · Restaurar respaldo'),
+                    ),
+                    if (_localBackups.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: _isRestoringBackup ? null : _restoreLocalSnapshot,
+                        icon: const Icon(Icons.history_rounded, size: 18),
+                        label: Text('Recuperar copia local (' + _localBackups.length.toString() + ')'),
+                      ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -329,14 +528,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             },
           ),
           const SizedBox(height: AppSpacing.md),
-          AppTextField(
+          AcademicUnitAutocompleteField(
             controller: _universityController,
             label: AppStrings.university,
-            hint: AppStrings.universityHint,
+            hint: 'Buscá una universidad, facultad o instituto',
             errorText: _universityError,
-            prefixIcon: const Icon(Icons.account_balance_outlined, size: 20),
-            onChanged: (val) {
-              if (_universityError != null && val.trim().isNotEmpty) {
+            onChanged: (value) {
+              if (_universityError != null && value.trim().isNotEmpty) {
                 setState(() => _universityError = null);
               }
             },
