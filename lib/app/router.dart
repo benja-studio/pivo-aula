@@ -1,0 +1,219 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../core/design_system/app_radius.dart';
+import '../core/design_system/app_spacing.dart';
+import '../core/design_system/components/blur_surface.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
+import '../features/home/presentation/home_screen.dart';
+import '../features/calendar/presentation/calendar_screen.dart';
+import '../features/subjects/presentation/subjects_screen.dart';
+import '../features/subjects/presentation/subject_detail_screen.dart';
+import '../features/exams/presentation/exam_detail_screen.dart';
+import '../features/grades/presentation/grades_screen.dart';
+import '../features/search/presentation/global_search_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
+GoRouter createRouter({required bool hasProfile}) {
+  return GoRouter(
+    navigatorKey: rootNavigatorKey,
+    initialLocation: hasProfile ? '/home' : '/onboarding',
+    routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const GlobalSearchScreen(),
+      ),
+      GoRoute(
+        path: '/subjects/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return SubjectDetailScreen(subjectId: id);
+        },
+      ),
+      GoRoute(
+        path: '/exams/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ExamDetailScreen(examId: id);
+        },
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return _ScaffoldWithNavBar(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/calendar',
+                builder: (context, state) => const CalendarScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/subjects',
+                builder: (context, state) => const SubjectsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/grades',
+                builder: (context, state) => const GradesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+class _ScaffoldWithNavBar extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const _ScaffoldWithNavBar({required this.navigationShell});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      extendBody: true,
+      body: navigationShell,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+          child: BlurSurface(
+            blur: 24,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isDark ? const Color(0xFF262A32) : const Color(0xFFE5E7EB),
+              width: 1,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _NavBarItem(
+                  icon: Icons.dashboard_outlined,
+                  activeIcon: Icons.dashboard_rounded,
+                  label: 'Inicio',
+                  isSelected: navigationShell.currentIndex == 0,
+                  onTap: () => navigationShell.goBranch(0),
+                ),
+                _NavBarItem(
+                  icon: Icons.calendar_today_outlined,
+                  activeIcon: Icons.calendar_month_rounded,
+                  label: 'Agenda',
+                  isSelected: navigationShell.currentIndex == 1,
+                  onTap: () => navigationShell.goBranch(1),
+                ),
+                _NavBarItem(
+                  icon: Icons.bookmark_outline_rounded,
+                  activeIcon: Icons.bookmark_rounded,
+                  label: 'Materias',
+                  isSelected: navigationShell.currentIndex == 2,
+                  onTap: () => navigationShell.goBranch(2),
+                ),
+                _NavBarItem(
+                  icon: Icons.grade_outlined,
+                  activeIcon: Icons.grade_rounded,
+                  label: 'Notas',
+                  isSelected: navigationShell.currentIndex == 3,
+                  onTap: () => navigationShell.goBranch(3),
+                ),
+                _NavBarItem(
+                  icon: Icons.settings_outlined,
+                  activeIcon: Icons.settings_rounded,
+                  label: 'Ajustes',
+                  isSelected: navigationShell.currentIndex == 4,
+                  onTap: () => navigationShell.goBranch(4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavBarItem extends StatelessWidget {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NavBarItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = isSelected
+        ? theme.colorScheme.primary
+        : (theme.brightness == Brightness.dark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280));
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: isSelected
+            ? ShapeDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                shape: AppRadius.continuousSm(),
+              )
+            : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(isSelected ? activeIcon : icon, color: color, size: 22),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
