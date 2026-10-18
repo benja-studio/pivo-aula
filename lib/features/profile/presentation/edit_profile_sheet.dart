@@ -7,6 +7,7 @@ import '../../../core/design_system/components/app_text_field.dart';
 import '../../../core/design_system/components/spring_sheet.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../domain/student_profile.dart';
+import 'academic_unit_autocomplete_field.dart';
 import 'avatar_view.dart';
 import 'profile_controller.dart';
 
@@ -145,9 +146,10 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           label: AppStrings.career,
         ),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(
+        AcademicUnitAutocompleteField(
           controller: _universityController,
           label: AppStrings.university,
+          hint: 'Buscá una universidad, facultad o instituto',
         ),
         const SizedBox(height: AppSpacing.md),
         Row(
