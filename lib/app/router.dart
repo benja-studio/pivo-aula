@@ -104,11 +104,19 @@ class _ScaffoldWithNavBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      extendBody: true,
+      // Keep page content above the navigation bar. Extending the body here
+      // placed the final rows/buttons underneath the floating navigation.
+      extendBody: false,
       body: navigationShell,
       bottomNavigationBar: SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
           child: BlurSurface(
             blur: 24,
             borderRadius: BorderRadius.circular(28),
@@ -116,44 +124,53 @@ class _ScaffoldWithNavBar extends StatelessWidget {
               color: isDark ? const Color(0xFF262A32) : const Color(0xFFE5E7EB),
               width: 1,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _NavBarItem(
-                  icon: Icons.dashboard_outlined,
-                  activeIcon: Icons.dashboard_rounded,
-                  label: 'Inicio',
-                  isSelected: navigationShell.currentIndex == 0,
-                  onTap: () => navigationShell.goBranch(0),
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
+                    label: 'Inicio',
+                    isSelected: navigationShell.currentIndex == 0,
+                    onTap: () => navigationShell.goBranch(0),
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_month_rounded,
-                  label: 'Agenda',
-                  isSelected: navigationShell.currentIndex == 1,
-                  onTap: () => navigationShell.goBranch(1),
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.calendar_today_outlined,
+                    activeIcon: Icons.calendar_month_rounded,
+                    label: 'Agenda',
+                    isSelected: navigationShell.currentIndex == 1,
+                    onTap: () => navigationShell.goBranch(1),
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.bookmark_outline_rounded,
-                  activeIcon: Icons.bookmark_rounded,
-                  label: 'Materias',
-                  isSelected: navigationShell.currentIndex == 2,
-                  onTap: () => navigationShell.goBranch(2),
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.bookmark_outline_rounded,
+                    activeIcon: Icons.bookmark_rounded,
+                    label: 'Materias',
+                    isSelected: navigationShell.currentIndex == 2,
+                    onTap: () => navigationShell.goBranch(2),
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.grade_outlined,
-                  activeIcon: Icons.grade_rounded,
-                  label: 'Notas',
-                  isSelected: navigationShell.currentIndex == 3,
-                  onTap: () => navigationShell.goBranch(3),
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.grade_outlined,
+                    activeIcon: Icons.grade_rounded,
+                    label: 'Notas',
+                    isSelected: navigationShell.currentIndex == 3,
+                    onTap: () => navigationShell.goBranch(3),
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings_rounded,
-                  label: 'Ajustes',
-                  isSelected: navigationShell.currentIndex == 4,
-                  onTap: () => navigationShell.goBranch(4),
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.settings_outlined,
+                    activeIcon: Icons.settings_rounded,
+                    label: 'Ajustes',
+                    isSelected: navigationShell.currentIndex == 4,
+                    onTap: () => navigationShell.goBranch(4),
+                  ),
                 ),
               ],
             ),
@@ -184,34 +201,50 @@ class _NavBarItem extends StatelessWidget {
     final theme = Theme.of(context);
     final color = isSelected
         ? theme.colorScheme.primary
-        : (theme.brightness == Brightness.dark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280));
+        : (theme.brightness == Brightness.dark
+            ? const Color(0xFF9CA3AF)
+            : const Color(0xFF6B7280));
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: isSelected
-            ? ShapeDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                shape: AppRadius.continuousSm(),
-              )
-            : null,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(isSelected ? activeIcon : icon, color: color, size: 22),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.continuousSm(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+            decoration: isSelected
+                ? ShapeDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    shape: AppRadius.continuousSm(),
+                  )
+                : null,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(isSelected ? activeIcon : icon, color: color, size: 21),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    height: 1.1,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
