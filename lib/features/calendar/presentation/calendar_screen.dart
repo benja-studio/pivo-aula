@@ -324,7 +324,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               );
             }),
-          const SizedBox(height: 80),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

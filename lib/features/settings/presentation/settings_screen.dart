@@ -445,7 +445,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               style: AppTypography.caption.copyWith(color: Colors.grey),
             ),
           ),
-          const SizedBox(height: 60),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

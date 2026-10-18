@@ -283,7 +283,7 @@ class GradesScreen extends ConsumerWidget {
                   ),
                 );
               }),
-              const SizedBox(height: 60),
+              const SizedBox(height: AppSpacing.lg),
             ],
           );
         },

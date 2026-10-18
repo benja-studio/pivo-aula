@@ -81,6 +81,8 @@ class HomeScreen extends ConsumerWidget {
                       Text(
                         '¡Hola, ${profile?.fullName.split(' ').first ?? 'Estudiante'}!',
                         style: AppTypography.display.copyWith(fontSize: 26),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -94,12 +96,25 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                GestureDetector(
-                  onTap: () => context.go('/settings'),
-                  child: AvatarView(
-                    photoPath: profile?.photoPath,
-                    name: profile?.fullName ?? 'A',
-                    size: 46,
+                IconButton(
+                  tooltip: 'Buscar en la app',
+                  onPressed: () => context.push('/search'),
+                  icon: const Icon(Icons.search_rounded),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.go('/settings'),
+                    customBorder: const CircleBorder(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: AvatarView(
+                        photoPath: profile?.photoPath,
+                        name: profile?.fullName ?? 'A',
+                        size: 44,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -336,7 +351,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               }),
-            const SizedBox(height: 80),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
