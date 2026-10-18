@@ -110,20 +110,21 @@ class _SpringSheetState extends State<SpringSheet>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final viewInsets = MediaQuery.of(context).viewInsets;
+    final mediaQuery = MediaQuery.of(context);
+    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
 
     final bg = isDark ? const Color(0xFF181B20) : Colors.white;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: Transform.translate(
-        offset: Offset(0, _dragOffset > 0 ? _dragOffset : _dragOffset),
+    // ModalBottomSheet already moves above the keyboard. Avoid applying the
+    // keyboard inset a second time, which used to push the sheet's CTA offscreen.
+    return Transform.translate(
+        offset: Offset(0, _dragOffset),
         child: GestureDetector(
           onVerticalDragUpdate: _onVerticalDragUpdate,
           onVerticalDragEnd: _onVerticalDragEnd,
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.88,
+              maxHeight: availableHeight * 0.92,
             ),
             decoration: ShapeDecoration(
               color: bg,
@@ -186,7 +187,13 @@ class _SpringSheetState extends State<SpringSheet>
                 Flexible(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xl,
+                      AppSpacing.xl,
+                      AppSpacing.xl,
+                      AppSpacing.xl + 8,
+                    ),
                     child: widget.child,
                   ),
                 ),
@@ -194,7 +201,6 @@ class _SpringSheetState extends State<SpringSheet>
             ),
           ),
         ),
-      ),
     );
   }
 }
