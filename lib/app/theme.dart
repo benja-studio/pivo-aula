@@ -1,10 +1,85 @@
 import 'package:flutter/material.dart';
 import '../core/design_system/app_colors.dart';
 import '../core/design_system/app_radius.dart';
+import '../core/design_system/app_spacing.dart';
 import '../core/design_system/app_typography.dart';
 
 class AppTheme {
   AppTheme._();
+
+  static const TextTheme _textTheme = TextTheme(
+    displayLarge: AppTypography.display,
+    headlineLarge: AppTypography.display,
+    headlineMedium: AppTypography.titleLarge,
+    headlineSmall: AppTypography.titleMedium,
+    titleLarge: AppTypography.titleLarge,
+    titleMedium: AppTypography.titleMedium,
+    titleSmall: AppTypography.titleSmall,
+    bodyLarge: AppTypography.bodyLarge,
+    bodyMedium: AppTypography.bodyMedium,
+    bodySmall: AppTypography.bodySmall,
+    labelLarge: AppTypography.button,
+    labelMedium: AppTypography.label,
+    labelSmall: AppTypography.caption,
+  );
+
+  /// One button geometry across Material controls. Color remains semantic and
+  /// is provided by the active ColorScheme.
+  static ButtonStyle _standardButtonStyle() => ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        ),
+        tapTargetSize: MaterialTapTargetSize.padded,
+        textStyle: const WidgetStatePropertyAll(AppTypography.button),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+      );
+
+  static IconButtonThemeData _iconButtonTheme() => IconButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
+          tapTargetSize: MaterialTapTargetSize.padded,
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+          ),
+        ),
+      );
+
+  static InputDecorationTheme _inputTheme({
+    required bool isDark,
+    required Color accentColor,
+  }) {
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final fillColor =
+        isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated;
+
+    OutlineInputBorder outline(BorderSide side) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: side,
+        );
+
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: fillColor,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      border: outline(BorderSide(color: borderColor)),
+      enabledBorder: outline(BorderSide(color: borderColor)),
+      focusedBorder: outline(BorderSide(color: accentColor, width: 1.7)),
+      errorBorder: outline(const BorderSide(color: AppColors.error)),
+      focusedErrorBorder:
+          outline(const BorderSide(color: AppColors.error, width: 1.7)),
+    );
+  }
+
 
   static ThemeData light({Color accentColor = AppColors.primary}) {
     final colorScheme = ColorScheme(
@@ -28,8 +103,17 @@ class AppTheme {
       brightness: Brightness.light,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.lightBg,
+      inputDecorationTheme: _inputTheme(isDark: false, accentColor: accentColor),
       fontFamily: AppTypography.fontFamily,
       fontFamilyFallback: AppTypography.fontFallbacks,
+      textTheme: _textTheme,
+      elevatedButtonTheme:
+          ElevatedButtonThemeData(style: _standardButtonStyle()),
+      filledButtonTheme: FilledButtonThemeData(style: _standardButtonStyle()),
+      outlinedButtonTheme:
+          OutlinedButtonThemeData(style: _standardButtonStyle()),
+      textButtonTheme: TextButtonThemeData(style: _standardButtonStyle()),
+      iconButtonTheme: _iconButtonTheme(),
       dividerTheme: const DividerThemeData(
         color: AppColors.lightBorder,
         thickness: 1,
@@ -89,8 +173,17 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.darkBg,
+      inputDecorationTheme: _inputTheme(isDark: true, accentColor: accentColor),
       fontFamily: AppTypography.fontFamily,
       fontFamilyFallback: AppTypography.fontFallbacks,
+      textTheme: _textTheme,
+      elevatedButtonTheme:
+          ElevatedButtonThemeData(style: _standardButtonStyle()),
+      filledButtonTheme: FilledButtonThemeData(style: _standardButtonStyle()),
+      outlinedButtonTheme:
+          OutlinedButtonThemeData(style: _standardButtonStyle()),
+      textButtonTheme: TextButtonThemeData(style: _standardButtonStyle()),
+      iconButtonTheme: _iconButtonTheme(),
       dividerTheme: const DividerThemeData(
         color: AppColors.darkBorder,
         thickness: 1,
