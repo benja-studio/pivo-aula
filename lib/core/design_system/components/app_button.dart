@@ -14,9 +14,9 @@ enum AppButtonVariant {
 }
 
 enum AppButtonSize {
-  sm(36.0, 12.0, 15.0),
-  md(46.0, 18.0, 18.0),
-  lg(54.0, 22.0, 20.0);
+  sm(40.0, 12.0, 16.0),
+  md(48.0, 18.0, 18.0),
+  lg(56.0, 22.0, 20.0);
 
   final double height;
   final double horizontalPadding;
