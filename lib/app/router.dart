@@ -158,7 +158,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
             decoration: ShapeDecoration(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 side: BorderSide(
                   color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   width: 1,
@@ -172,13 +172,13 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               children: [
                 Expanded(
                   child: _NavBarItem(
-                    icon: Icons.dashboard_outlined,
-                    activeIcon: Icons.dashboard_rounded,
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
                     label: 'Inicio',
                     isSelected: navigationShell.currentIndex == 0,
                     onTap: () {
@@ -189,7 +189,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                 ),
                 Expanded(
                   child: _NavBarItem(
-                    icon: Icons.calendar_today_outlined,
+                    icon: Icons.calendar_month_outlined,
                     activeIcon: Icons.calendar_month_rounded,
                     label: 'Agenda',
                     isSelected: navigationShell.currentIndex == 1,
@@ -201,8 +201,8 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                 ),
                 Expanded(
                   child: _NavBarItem(
-                    icon: Icons.bookmark_outline_rounded,
-                    activeIcon: Icons.bookmark_rounded,
+                    icon: Icons.menu_book_outlined,
+                    activeIcon: Icons.menu_book_rounded,
                     label: 'Materias',
                     isSelected: navigationShell.currentIndex == 2,
                     onTap: () {
@@ -213,8 +213,8 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                 ),
                 Expanded(
                   child: _NavBarItem(
-                    icon: Icons.grade_outlined,
-                    activeIcon: Icons.grade_rounded,
+                    icon: Icons.insights_outlined,
+                    activeIcon: Icons.insights_rounded,
                     label: 'Notas',
                     isSelected: navigationShell.currentIndex == 3,
                     onTap: () {
@@ -225,8 +225,8 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                 ),
                 Expanded(
                   child: _NavBarItem(
-                    icon: Icons.settings_outlined,
-                    activeIcon: Icons.settings_rounded,
+                    icon: Icons.tune_outlined,
+                    activeIcon: Icons.tune_rounded,
                     label: 'Ajustes',
                     isSelected: navigationShell.currentIndex == 4,
                     onTap: () {
@@ -268,6 +268,8 @@ class _NavBarItem extends StatelessWidget {
         ? primary
         : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final animationDuration =
+        reduceMotion ? Duration.zero : AppMotion.selectionDuration;
 
     return Semantics(
       button: true,
@@ -277,69 +279,81 @@ class _NavBarItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          customBorder: AppRadius.continuousSm(),
-          child: AnimatedContainer(
-            duration: reduceMotion
-                ? Duration.zero
-                : AppMotion.selectionDuration,
-            curve: Curves.easeOutCubic,
-            constraints: const BoxConstraints(minHeight: 48),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-            decoration: isSelected
-                ? ShapeDecoration(
-                    color: primary.withValues(alpha: isDark ? 0.20 : 0.10),
-                    shape: AppRadius.continuousSm(
-                      side: BorderSide(
-                        color: primary.withValues(alpha: isDark ? 0.35 : 0.20),
-                        width: 1,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 62),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: animationDuration,
+                    curve: Curves.easeOutCubic,
+                    width: 42,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? primary.withValues(alpha: isDark ? 0.22 : 0.10)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(
+                        color: isSelected
+                            ? primary.withValues(alpha: isDark ? 0.42 : 0.22)
+                            : Colors.transparent,
                       ),
                     ),
-                  )
-                : null,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: reduceMotion
-                      ? Duration.zero
-                      : AppMotion.iconSwitchDuration,
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    final scale = Tween<double>(
-                      begin: 0.78,
-                      end: 1.0,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ));
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(scale: scale, child: child),
-                    );
-                  },
-                  child: Icon(
-                    key: ValueKey<bool>(isSelected),
-                    isSelected ? activeIcon : icon,
-                    color: color,
-                    size: 21,
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : AppMotion.iconSwitchDuration,
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          final scale = Tween<double>(
+                            begin: 0.82,
+                            end: 1,
+                          ).animate(CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ));
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(scale: scale, child: child),
+                          );
+                        },
+                        child: Icon(
+                          key: ValueKey<bool>(isSelected),
+                          isSelected ? activeIcon : icon,
+                          color: color,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 10,
-                    height: 1.1,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: animationDuration,
+                    curve: Curves.easeOutCubic,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 10.5,
+                      height: 1.1,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      letterSpacing: 0.05,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
