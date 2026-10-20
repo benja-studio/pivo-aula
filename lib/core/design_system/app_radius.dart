@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Shared corner geometry for Aula.
+///
+/// Direct radii keep cards and controls consistent. Multiplying the base
+/// values made buttons and navigation indicators excessively pill-shaped.
 class AppRadius {
   AppRadius._();
 
@@ -17,16 +21,36 @@ class AppRadius {
   static BorderRadius radiusXl = BorderRadius.circular(xl);
   static BorderRadius radiusFull = BorderRadius.circular(full);
 
-  /// Continuous / superellipse border style
-  static ContinuousRectangleBorder continuousSm({BorderSide side = BorderSide.none}) =>
-      ContinuousRectangleBorder(borderRadius: BorderRadius.circular(sm * 2.2), side: side);
+  /// Continuous (squircle-style) corners using the same radius scale.
+  static ContinuousRectangleBorder continuousSm({
+    BorderSide side = BorderSide.none,
+  }) =>
+      ContinuousRectangleBorder(
+        borderRadius: BorderRadius.circular(sm),
+        side: side,
+      );
 
-  static ContinuousRectangleBorder continuousMd({BorderSide side = BorderSide.none}) =>
-      ContinuousRectangleBorder(borderRadius: BorderRadius.circular(md * 2.2), side: side);
+  static ContinuousRectangleBorder continuousMd({
+    BorderSide side = BorderSide.none,
+  }) =>
+      ContinuousRectangleBorder(
+        borderRadius: BorderRadius.circular(md),
+        side: side,
+      );
 
-  static ContinuousRectangleBorder continuousLg({BorderSide side = BorderSide.none}) =>
-      ContinuousRectangleBorder(borderRadius: BorderRadius.circular(lg * 2.2), side: side);
+  static ContinuousRectangleBorder continuousLg({
+    BorderSide side = BorderSide.none,
+  }) =>
+      ContinuousRectangleBorder(
+        borderRadius: BorderRadius.circular(lg),
+        side: side,
+      );
 
-  static ContinuousRectangleBorder continuousXl({BorderSide side = BorderSide.none}) =>
-      ContinuousRectangleBorder(borderRadius: BorderRadius.circular(xl * 2.2), side: side);
+  static ContinuousRectangleBorder continuousXl({
+    BorderSide side = BorderSide.none,
+  }) =>
+      ContinuousRectangleBorder(
+        borderRadius: BorderRadius.circular(xl),
+        side: side,
+      );
 }
