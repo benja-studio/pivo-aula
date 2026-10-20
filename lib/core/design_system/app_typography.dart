@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class AppTypography {
   AppTypography._();
 
-  static const String fontFamily = 'Inter';
-  static const List<String> fontFallbacks = ['Roboto', 'sans-serif'];
+  static const String fontFamily = 'Roboto';
+  static const List<String> fontFallbacks = ['Arial', 'sans-serif'];
 
   static const TextStyle display = TextStyle(
     fontFamily: fontFamily,
