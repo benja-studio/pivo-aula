@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/database/database_provider.dart';
 import '../../../core/design_system/app_colors.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/app_card.dart';
 import '../../../core/design_system/components/app_chip.dart';
 import '../../../core/design_system/components/app_text_field.dart';
-import '../../../core/database/database_provider.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/services/backup_service.dart';
 import '../../../core/services/security_service.dart';
-import '../../../core/l10n/app_strings.dart';
-import '../../subjects/presentation/subject_form_preferences.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/presentation/avatar_view.dart';
 import '../../profile/presentation/edit_profile_sheet.dart';
 import '../../profile/presentation/profile_controller.dart';
+import '../../subjects/presentation/subject_form_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
