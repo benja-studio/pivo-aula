@@ -8,6 +8,34 @@ import '../features/security/presentation/lock_screen.dart';
 import 'router.dart';
 import 'theme.dart';
 
+
+/// Android should feel anchored, not elastic. Keep familiar iOS physics on
+/// Apple platforms, but clamp Android scrolling and suppress its stretch
+/// overscroll effect throughout the app.
+class AulaScrollBehavior extends MaterialScrollBehavior {
+  const AulaScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return const ClampingScrollPhysics();
+    }
+    return super.getScrollPhysics(context);
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return child;
+    }
+    return super.buildOverscrollIndicator(context, child, details);
+  }
+}
+
 class AulaApp extends ConsumerStatefulWidget {
   final bool hasProfile;
   const AulaApp({super.key, required this.hasProfile});
@@ -79,6 +107,7 @@ class _AulaAppState extends ConsumerState<AulaApp> with WidgetsBindingObserver {
     if (_isLocked) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
+        scrollBehavior: const AulaScrollBehavior(),
         theme: AppTheme.light(accentColor: accentColor),
         darkTheme: AppTheme.dark(accentColor: accentColor),
         themeMode: themeMode,
@@ -91,6 +120,7 @@ class _AulaAppState extends ConsumerState<AulaApp> with WidgetsBindingObserver {
     return MaterialApp.router(
       title: 'Aula',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AulaScrollBehavior(),
       theme: AppTheme.light(accentColor: accentColor),
       darkTheme: AppTheme.dark(accentColor: accentColor),
       themeMode: themeMode,
