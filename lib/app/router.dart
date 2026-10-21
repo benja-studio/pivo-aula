@@ -139,40 +139,24 @@ class _ScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
+    // A quiet, full-width navigation rail is easier to read than a floating
+    // pill made of five animated mini-buttons. Selection is indicated by
+    // icon weight, label color and a short static marker—without a pulse.
     return Scaffold(
-      extendBody: false,
       body: navigationShell,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.xs,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          child: Container(
-            decoration: ShapeDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                side: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  width: 1,
-                ),
-              ),
-              shadows: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: surface,
+          border: Border(top: BorderSide(color: border, width: 1)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 5, 4, 3),
             child: Row(
               children: [
                 Expanded(
@@ -181,10 +165,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.home_rounded,
                     label: 'Inicio',
                     isSelected: navigationShell.currentIndex == 0,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      navigationShell.goBranch(0);
-                    },
+                    onTap: () => _selectBranch(0),
                   ),
                 ),
                 Expanded(
@@ -193,10 +174,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.calendar_month_rounded,
                     label: 'Agenda',
                     isSelected: navigationShell.currentIndex == 1,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      navigationShell.goBranch(1);
-                    },
+                    onTap: () => _selectBranch(1),
                   ),
                 ),
                 Expanded(
@@ -205,10 +183,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.menu_book_rounded,
                     label: 'Materias',
                     isSelected: navigationShell.currentIndex == 2,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      navigationShell.goBranch(2);
-                    },
+                    onTap: () => _selectBranch(2),
                   ),
                 ),
                 Expanded(
@@ -217,10 +192,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.insights_rounded,
                     label: 'Notas',
                     isSelected: navigationShell.currentIndex == 3,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      navigationShell.goBranch(3);
-                    },
+                    onTap: () => _selectBranch(3),
                   ),
                 ),
                 Expanded(
@@ -229,10 +201,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
                     activeIcon: Icons.tune_rounded,
                     label: 'Ajustes',
                     isSelected: navigationShell.currentIndex == 4,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      navigationShell.goBranch(4);
-                    },
+                    onTap: () => _selectBranch(4),
                   ),
                 ),
               ],
@@ -241,6 +210,11 @@ class _ScaffoldWithNavBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _selectBranch(int index) {
+    HapticFeedback.selectionClick();
+    navigationShell.goBranch(index);
   }
 }
 
@@ -263,13 +237,11 @@ class _NavBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primary = theme.colorScheme.primary;
-    final color = isSelected
-        ? primary
-        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final animationDuration =
-        reduceMotion ? Duration.zero : AppMotion.selectionDuration;
+    final selectedColor = theme.colorScheme.primary;
+    final idleColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final color = isSelected ? selectedColor : idleColor;
 
     return Semantics(
       button: true,
@@ -279,81 +251,45 @@ class _NavBarItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 62),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: animationDuration,
-                    curve: Curves.easeOutCubic,
-                    width: 42,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? primary.withValues(alpha: isDark ? 0.22 : 0.10)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(
-                        color: isSelected
-                            ? primary.withValues(alpha: isDark ? 0.42 : 0.22)
-                            : Colors.transparent,
-                      ),
-                    ),
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: reduceMotion
-                            ? Duration.zero
-                            : AppMotion.iconSwitchDuration,
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          final scale = Tween<double>(
-                            begin: 0.82,
-                            end: 1,
-                          ).animate(CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          ));
-                          return FadeTransition(
-                            opacity: animation,
-                            child: ScaleTransition(scale: scale, child: child),
-                          );
-                        },
-                        child: Icon(
-                          key: ValueKey<bool>(isSelected),
-                          isSelected ? activeIcon : icon,
-                          color: color,
-                          size: 20,
-                        ),
-                      ),
-                    ),
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: Colors.transparent,
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: SizedBox(
+            height: 60,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isSelected ? activeIcon : icon,
+                  color: color,
+                  size: 22,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10.5,
+                    height: 1.1,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    letterSpacing: 0.05,
                   ),
-                  const SizedBox(height: 4),
-                  AnimatedDefaultTextStyle(
-                    duration: animationDuration,
-                    curve: Curves.easeOutCubic,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 10.5,
-                      height: 1.1,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      letterSpacing: 0.05,
-                    ),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: isSelected ? 16 : 0,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: isSelected ? selectedColor : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
