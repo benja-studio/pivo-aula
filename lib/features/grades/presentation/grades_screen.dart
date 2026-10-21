@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/design_system/app_radius.dart';
@@ -94,7 +95,7 @@ class GradesScreen extends ConsumerWidget {
 
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            physics: const BouncingScrollPhysics(),
+            physics: appScrollPhysics(),
             children: [
               // Overall Average Highlight Card
               AppCard(
