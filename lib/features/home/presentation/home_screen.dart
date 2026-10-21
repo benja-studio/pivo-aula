@@ -1,25 +1,26 @@
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_radius.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/animated_counter.dart';
 import '../../../core/design_system/components/app_card.dart';
 import '../../../core/design_system/components/pressable_scale.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/app_strings.dart';
-import '../../profile/data/profile_repository.dart';
-import '../../profile/presentation/avatar_view.dart';
-import '../../subjects/data/subject_repository.dart';
+import '../../../core/utils/formatters.dart';
 import '../../exams/data/exam_repository.dart';
 import '../../exams/presentation/upsert_exam_sheet.dart';
-import '../../subjects/presentation/upsert_subject_sheet.dart';
 import '../../grades/data/grade_repository.dart';
 import '../../grades/presentation/grade_controller.dart';
 import '../../grades/presentation/upsert_grade_sheet.dart';
+import '../../profile/data/profile_repository.dart';
+import '../../profile/presentation/avatar_view.dart';
+import '../../subjects/data/subject_repository.dart';
+import '../../subjects/presentation/upsert_subject_sheet.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
