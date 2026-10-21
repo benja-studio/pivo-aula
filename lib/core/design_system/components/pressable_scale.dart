@@ -58,6 +58,17 @@ class _PressableScaleState extends State<PressableScale>
       return;
     }
 
+    // Android interactions use a short, deterministic ease rather than a
+    // spring simulation. This avoids the elastic rebound on every card press.
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      _controller.animateTo(
+        target,
+        duration: Duration(milliseconds: target < 1.0 ? 75 : 95),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
     _controller.animateWith(
       SpringSimulation(
         AppMotion.defaultUi,
