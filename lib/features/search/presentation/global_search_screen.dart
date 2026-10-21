@@ -1,16 +1,17 @@
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/design_system/app_radius.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/app_card.dart';
 import '../../../core/utils/formatters.dart';
-import '../../subjects/data/subject_repository.dart';
 import '../../exams/data/exam_repository.dart';
-import '../../topics/data/topic_repository.dart';
 import '../../grades/data/grade_repository.dart';
+import '../../subjects/data/subject_repository.dart';
+import '../../topics/data/topic_repository.dart';
 
 class GlobalSearchScreen extends ConsumerStatefulWidget {
   const GlobalSearchScreen({super.key});
