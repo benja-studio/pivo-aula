@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -268,7 +269,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        physics: const BouncingScrollPhysics(),
+        physics: appScrollPhysics(),
         children: [
           // Profile Card
           if (profile != null) ...[
