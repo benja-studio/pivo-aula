@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -482,7 +483,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buildDataPage(ThemeData theme, bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      physics: const BouncingScrollPhysics(),
+      physics: appScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -645,7 +646,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buildPreferencesPage(ThemeData theme, bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      physics: const BouncingScrollPhysics(),
+      physics: appScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
