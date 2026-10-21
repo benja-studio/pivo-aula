@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/services/backup_service.dart';
@@ -115,29 +116,55 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _restoreBackupFile() async {
     if (_isRestoringBackup) return;
+
+    File? stagedFile;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['aula'],
+        allowedExtensions: const ['aula', 'zip'],
         allowMultiple: false,
+        withData: true,
       );
-      if (result == null || result.files.isEmpty) return;
-      final path = result.files.single.path;
-      if (path == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo acceder al archivo seleccionado.')),
+      if (result == null || result.files.isEmpty || !mounted) return;
+
+      final selectedFile = result.files.single;
+      final selectedPath = selectedFile.path;
+      late final String backupPath;
+
+      // Android document providers can return a content URI without a usable
+      // filesystem path. Prefer the normal path when available; otherwise
+      // stage the bytes in the app's private temporary directory.
+      if (selectedPath != null &&
+          selectedPath.isNotEmpty &&
+          await File(selectedPath).exists()) {
+        backupPath = selectedPath;
+      } else {
+        final bytes = selectedFile.bytes;
+        if (bytes == null || bytes.isEmpty) {
+          throw Exception(
+            'Android no pudo leer el archivo seleccionado. '
+            'Probá elegirlo desde la aplicación Archivos o Descargas.',
           );
         }
-        return;
+
+        final tempDirectory = await getTemporaryDirectory();
+        stagedFile = File(
+          '${tempDirectory.path}${Platform.pathSeparator}'
+          'aula_import_${DateTime.now().microsecondsSinceEpoch}.aula',
+        );
+        await stagedFile.writeAsBytes(bytes, flush: true);
+        backupPath = stagedFile.path;
       }
 
+      if (!mounted) return;
       setState(() => _isRestoringBackup = true);
+
       final service = BackupService(ref.read(appDatabaseProvider));
-      final encrypted = await service.backupRequiresPassword(path);
+      final encrypted = await service.backupRequiresPassword(backupPath);
       final password = encrypted ? await _askBackupPassword() : null;
       if (encrypted && password == null) return;
-      await service.restoreBackup(path, password: password);
+
+      await service.restoreBackup(backupPath, password: password);
       await _finishRestoreFlow();
     } catch (error) {
       if (mounted) {
@@ -147,7 +174,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         );
       }
     } finally {
-      if (mounted && _isRestoringBackup) setState(() => _isRestoringBackup = false);
+      if (stagedFile != null) {
+        try {
+          if (await stagedFile.exists()) await stagedFile.delete();
+        } catch (_) {
+          // Temporary-file cleanup must not hide the restore result.
+        }
+      }
+      if (mounted && _isRestoringBackup) {
+        setState(() => _isRestoringBackup = false);
+      }
     }
   }
 
