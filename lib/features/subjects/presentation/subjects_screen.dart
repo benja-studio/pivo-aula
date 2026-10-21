@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/design_system/app_radius.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/app_card.dart';
@@ -11,8 +12,8 @@ import '../../../core/design_system/components/empty_state.dart';
 import '../../../core/design_system/components/pressable_scale.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../data/subject_repository.dart';
-import '../domain/subject.dart';
 import '../domain/subject_icons.dart';
+import '../domain/subject.dart';
 import 'subject_controller.dart';
 import 'upsert_subject_sheet.dart';
 
