@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/design_system/app_radius.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/app_card.dart';
@@ -10,10 +11,10 @@ import '../../../core/design_system/components/app_chip.dart';
 import '../../../core/design_system/components/empty_state.dart';
 import '../../../core/design_system/components/spring_sheet.dart';
 import '../../../core/utils/formatters.dart';
-import '../../subjects/data/subject_repository.dart';
 import '../../exams/data/exam_repository.dart';
 import '../../exams/domain/exam.dart';
 import '../../exams/presentation/upsert_exam_sheet.dart';
+import '../../subjects/data/subject_repository.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
