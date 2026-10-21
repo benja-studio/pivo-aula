@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/app_radius.dart';
@@ -124,7 +125,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 )
               : ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  physics: const BouncingScrollPhysics(),
+                  physics: appScrollPhysics(),
                   children: [
                     if (matchingSubjects.isNotEmpty) ...[
                       Text('Materias (${matchingSubjects.length})', style: AppTypography.titleSmall),
