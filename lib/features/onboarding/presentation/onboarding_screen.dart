@@ -1,21 +1,23 @@
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
-import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:go_router/go_router.dart';
+
 import '../../../core/database/database_provider.dart';
-import '../../../core/services/backup_service.dart';
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_radius.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import '../../../core/design_system/app_spacing.dart';
 import '../../../core/design_system/app_typography.dart';
 import '../../../core/design_system/components/app_button.dart';
-import '../../../core/design_system/components/app_text_field.dart';
 import '../../../core/design_system/components/app_chip.dart';
+import '../../../core/design_system/components/app_text_field.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/services/backup_service.dart';
 import '../../profile/presentation/academic_unit_autocomplete_field.dart';
 import '../../profile/presentation/avatar_view.dart';
 import '../../profile/presentation/profile_controller.dart';
