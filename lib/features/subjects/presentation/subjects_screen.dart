@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/design_system/app_scroll_physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/app_radius.dart';
@@ -83,7 +84,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
           }).toList();
 
           return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: appScrollPhysics(),
             slivers: [
               // Search & Filter Header
               SliverToBoxAdapter(
@@ -117,7 +118,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                       // Filter Chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
+                        physics: appScrollPhysics(),
                         child: Row(
                           children: [
                             AppChip(
