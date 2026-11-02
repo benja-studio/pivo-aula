@@ -1,104 +1,91 @@
 import 'package:flutter/material.dart';
 
-/// Bespoke, solid architectural color palette for Aula.
-/// Strictly non-generic, high-legibility, and ZERO gradients.
+/// Tokens globales de Aula. Las pantallas deben consumir estos valores
+/// o el ColorScheme activo, nunca definir colores de interfaz por su cuenta.
 class AppColors {
   AppColors._();
 
-  // Primary Default (Intellectual Cobalt / Electric Sapphire)
-  static const Color primary = Color(0xFF2F54EB);
-  static const Color primaryDark = Color(0xFF597EF7);
+  // Marca y acentos principales.
+  static const Color primary = Color(0xFF6366F1);
+  static const Color primaryDark = Color(0xFF818CF8);
+  static const Color secondary = Color(0xFF0EA5E9);
+  static const Color secondaryDark = Color(0xFF38BDF8);
 
-  // Accent choices for student customization (Curated solid tones)
+  // Opciones para personalización de materias/perfil.
   static const List<Color> accentOptions = [
-    Color(0xFF2F54EB), // Royal Cobalt
-    Color(0xFF4F46E5), // Deep Indigo
-    Color(0xFF0D9488), // Slate Teal
-    Color(0xFF0284C7), // Steel Sky
-    Color(0xFF7C3AED), // Amethyst Violet
-    Color(0xFFE11D48), // Deep Rose
-    Color(0xFFD97706), // Warm Amber
-    Color(0xFF059669), // Forest Emerald
+    Color(0xFF6366F1),
+    Color(0xFF0EA5E9),
+    Color(0xFF8B5CF6),
+    Color(0xFF0D9488),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFFEF4444),
+    Color(0xFFEC4899),
   ];
 
-  // Curated subject colors (Harmonious, crisp, distinct)
   static const List<Color> subjectColors = [
-    Color(0xFF2F54EB), // Cobalt
-    Color(0xFF4F46E5), // Indigo
-    Color(0xFF0284C7), // Sky
-    Color(0xFF0D9488), // Teal
-    Color(0xFF059669), // Emerald
-    Color(0xFFD97706), // Amber
-    Color(0xFFDC2626), // Crimson
-    Color(0xFF7C3AED), // Violet
-    Color(0xFFDB2777), // Berry
-    Color(0xFF475569), // Slate
+    Color(0xFF6366F1),
+    Color(0xFF0EA5E9),
+    Color(0xFF8B5CF6),
+    Color(0xFF0D9488),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFFEF4444),
+    Color(0xFFEC4899),
+    Color(0xFF64748B),
+    Color(0xFF14B8A6),
   ];
 
-  // Semantic Status (Solid, authoritative, non-neon)
+  // Academic status tokens (light mode).
   static const Color success = Color(0xFF10B981);
+  static const Color enrolled = Color(0xFF3B82F6);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF0EA5E9);
+  static const Color pending = Color(0xFF6B7280);
+  static const Color info = secondary;
 
-  // Semantic Status Toned Surfaces (Light / Dark)
-  static const Color successLight = Color(0xFFECFDF5);
-  static const Color successDark = Color(0xFF064E3B);
-  static const Color warningLight = Color(0xFFFFFBEB);
-  static const Color warningDark = Color(0xFF451A03);
-  static const Color errorLight = Color(0xFFFEF2F2);
-  static const Color errorDark = Color(0xFF450A0A);
-  static const Color infoLight = Color(0xFFF0F9FF);
-  static const Color infoDark = Color(0xFF082F49);
-
-  // Light Canvas & Surfaces (Crisp slate-porcelain, never muddy)
+  // Light canvas, surfaces, borders and text.
   static const Color lightBg = Color(0xFFF8FAFC);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceElevated = Color(0xFFF1F5F9);
+  static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
   static const Color lightBorder = Color(0xFFE2E8F0);
-  static const Color lightBorderSubtle = Color(0xFFEDF2F7);
+  static const Color lightBorderSubtle = Color(0xFFF1F5F9);
   static const Color lightTextPrimary = Color(0xFF0F172A);
-  static const Color lightTextSecondary = Color(0xFF475569);
+  static const Color lightTextSecondary = Color(0xFF64748B);
   static const Color lightTextTertiary = Color(0xFF94A3B8);
 
-  // Dark Canvas & Surfaces (Deep obsidian, surgical tone hierarchy)
-  static const Color darkBg = Color(0xFF0A0C10);
-  static const Color darkSurface = Color(0xFF12151D);
-  static const Color darkSurfaceElevated = Color(0xFF1B202B);
-  static const Color darkBorder = Color(0xFF242A38);
-  static const Color darkBorderSubtle = Color(0xFF1C2230);
+  // Dark canvas, surfaces, borders and text.
+  static const Color darkBg = Color(0xFF090D16);
+  static const Color darkSurface = Color(0xFF111827);
+  static const Color darkSurfaceElevated = Color(0xFF111827);
+  static const Color darkBorder = Color(0xFF1F2937);
+  static const Color darkBorderSubtle = Color(0xFF1F2937);
   static const Color darkTextPrimary = Color(0xFFF8FAFC);
   static const Color darkTextSecondary = Color(0xFF94A3B8);
   static const Color darkTextTertiary = Color(0xFF64748B);
 
-  // Context-aware color helpers
-  static Color surface(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkSurface
-        : lightSurface;
-  }
+  // Status-tinted badge surfaces.
+  static const Color successLight = Color(0xFFECFDF5);
+  static const Color successDark = Color(0xFF064E3B);
+  static const Color enrolledLight = Color(0xFFEFF6FF);
+  static const Color enrolledDark = Color(0xFF172554);
+  static const Color warningLight = Color(0xFFFFFBEB);
+  static const Color warningDark = Color(0xFF451A03);
+  static const Color errorLight = Color(0xFFFEF2F2);
+  static const Color errorDark = Color(0xFF450A0A);
+  static const Color pendingLight = Color(0xFFF3F4F6);
+  static const Color pendingDark = Color(0xFF1F2937);
+  static const Color infoLight = Color(0xFFF0F9FF);
+  static const Color infoDark = Color(0xFF082F49);
 
-  static Color border(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkBorder
-        : lightBorder;
-  }
-
-  static Color textPrimary(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkTextPrimary
-        : lightTextPrimary;
-  }
-
-  static Color textSecondary(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkTextSecondary
-        : lightTextSecondary;
-  }
-
-  static Color textTertiary(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkTextTertiary
-        : lightTextTertiary;
-  }
+  static Color surface(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkSurface : lightSurface;
+  static Color border(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkBorder : lightBorder;
+  static Color textPrimary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkTextPrimary : lightTextPrimary;
+  static Color textSecondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkTextSecondary : lightTextSecondary;
+  static Color textTertiary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkTextTertiary : lightTextTertiary;
 }

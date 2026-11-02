@@ -48,7 +48,7 @@ class AppTypography {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.0,
-    height: 1.5,
+    height: 1.4,
   );
 
   static const TextStyle bodyMedium = TextStyle(
@@ -57,7 +57,7 @@ class AppTypography {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.0,
-    height: 1.45,
+    height: 1.35,
   );
 
   static const TextStyle label = TextStyle(
