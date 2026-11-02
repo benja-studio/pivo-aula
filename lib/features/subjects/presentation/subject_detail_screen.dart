@@ -37,7 +37,7 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -226,13 +226,15 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
                   ),
                   bottom: TabBar(
                     controller: _tabController,
+                    isScrollable: true,
                     indicatorColor: subjectColor,
                     labelColor: subjectColor,
                     unselectedLabelColor: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280),
                     tabs: const [
                       Tab(text: 'Exámenes'),
+                      Tab(text: 'Apuntes'),
                       Tab(text: 'Temas'),
-                      Tab(text: 'Notas'),
+                      Tab(text: 'Calificaciones'),
                     ],
                   ),
                 ),
@@ -242,6 +244,7 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
               controller: _tabController,
               children: [
                 _SubjectExamsTab(subject: subject),
+                _SubjectNotesTab(subject: subject),
                 _SubjectTopicsTab(subject: subject),
                 _SubjectGradesTab(subject: subject),
               ],
@@ -360,6 +363,163 @@ class _SubjectExamsTab extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+}
+
+class _SubjectNotesTab extends ConsumerStatefulWidget {
+  final Subject subject;
+
+  const _SubjectNotesTab({required this.subject});
+
+  @override
+  ConsumerState<_SubjectNotesTab> createState() => _SubjectNotesTabState();
+}
+
+class _SubjectNotesTabState extends ConsumerState<_SubjectNotesTab> {
+  late final TextEditingController _notesController;
+  bool _hasChanges = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _notesController = TextEditingController(text: widget.subject.notes ?? '');
+  }
+
+  @override
+  void didUpdateWidget(covariant _SubjectNotesTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newNotes = widget.subject.notes ?? '';
+    if ((oldWidget.subject.notes ?? '') != newNotes &&
+        newNotes != _notesController.text) {
+      _notesController.text = newNotes;
+      _hasChanges = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveNotes() async {
+    if (_isSaving || !_hasChanges) return;
+    setState(() => _isSaving = true);
+
+    await ref.read(subjectControllerProvider.notifier).updateSubject(
+          widget.subject.copyWith(notes: _notesController.text.trim()),
+        );
+
+    if (!mounted) return;
+    final hasError = ref.read(subjectControllerProvider).hasError;
+    setState(() {
+      _isSaving = false;
+      _hasChanges = hasError;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          hasError
+              ? 'No se pudieron guardar los apuntes.'
+              : 'Apuntes guardados correctamente.',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final subjectColor = Color(widget.subject.colorValue);
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.sticky_note_2_outlined,
+                    color: subjectColor,
+                    size: 23,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Apuntes de la materia',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'Este bloc queda guardado en tu dispositivo.',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: _notesController,
+                minLines: 10,
+                maxLines: 16,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (_) => setState(() => _hasChanges = true),
+                decoration: InputDecoration(
+                  hintText:
+                      'Anotá definiciones, fórmulas, recordatorios o ideas importantes...',
+                  alignLabelWithHint: true,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _hasChanges
+                          ? 'Tenés cambios sin guardar'
+                          : 'Los apuntes se almacenan junto a esta materia',
+                      style: AppTypography.caption.copyWith(
+                        color: _hasChanges
+                            ? theme.colorScheme.primary
+                            : AppColors.textTertiary(context),
+                      ),
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: _isSaving || !_hasChanges ? null : _saveNotes,
+                    icon: _isSaving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined, size: 18),
+                    label: const Text('Guardar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -544,7 +704,7 @@ class _SubjectGradesTab extends ConsumerWidget {
                         children: [
                           Text(g.title, style: AppTypography.titleSmall),
                           Text(
-                            '${g.kind.label} · Peso ${g.weight.toStringAsFixed(0)} · ${AppFormatters.date(g.date)}',
+                            '${g.kind.label} · Peso ${(g.weight * 100).toStringAsFixed(0)}% · ${AppFormatters.date(g.date)}',
                             style: AppTypography.caption.copyWith(color: Colors.grey),
                           ),
                         ],

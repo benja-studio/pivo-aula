@@ -29,7 +29,7 @@ class GradeCalculatorSheet extends ConsumerStatefulWidget {
 class _GradeCalculatorSheetState extends ConsumerState<GradeCalculatorSheet> {
   String? _selectedSubjectId;
   final _targetController = TextEditingController(text: '7.0');
-  final _weightController = TextEditingController(text: '1.0');
+  final _weightController = TextEditingController(text: '100');
   double? _requiredGrade;
 
   @override
@@ -45,7 +45,11 @@ class _GradeCalculatorSheetState extends ConsumerState<GradeCalculatorSheet> {
     final subjectGrades = allGrades.where((g) => g.subjectId == _selectedSubjectId).toList();
 
     final target = double.tryParse(_targetController.text.trim().replaceAll(',', '.')) ?? 7.0;
-    final weight = double.tryParse(_weightController.text.trim().replaceAll(',', '.')) ?? 1.0;
+    final remainingWeightPercent = double.tryParse(
+          _weightController.text.trim().replaceAll(',', '.'),
+        ) ??
+        100.0;
+    final weight = remainingWeightPercent / 100.0;
 
     final result = GradeCalculations.calculateRequiredGrade(
       currentGrades: subjectGrades,
@@ -135,8 +139,8 @@ class _GradeCalculatorSheetState extends ConsumerState<GradeCalculatorSheet> {
             Expanded(
               child: AppTextField(
                 controller: _weightController,
-                label: 'Peso del examen',
-                hint: '1.0',
+                label: 'Peso pendiente (%)',
+                hint: '100',
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: (_) => _calculate(),
               ),

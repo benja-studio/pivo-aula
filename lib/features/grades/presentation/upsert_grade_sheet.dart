@@ -62,6 +62,7 @@ class _UpsertGradeSheetState extends ConsumerState<UpsertGradeSheet> {
 
   String? _valueError;
   String? _titleError;
+  String? _weightError;
 
   @override
   void initState() {
@@ -69,7 +70,7 @@ class _UpsertGradeSheetState extends ConsumerState<UpsertGradeSheet> {
     final g = widget.gradeToEdit;
     _titleController = TextEditingController(text: g?.title ?? '');
     _valueController = TextEditingController(text: g != null ? g.value.toString() : '');
-    _weightController = TextEditingController(text: (g?.weight ?? 1.0).toString());
+    _weightController = TextEditingController(text: ((g?.weight ?? 1.0) * 100).toStringAsFixed(0));
 
     _selectedSubjectId = g?.subjectId ?? widget.preselectedSubjectId;
     _selectedExamId = g?.examId ?? widget.preselectedExamId;
@@ -101,6 +102,9 @@ class _UpsertGradeSheetState extends ConsumerState<UpsertGradeSheet> {
 
   Future<void> _submit() async {
     final val = double.tryParse(_valueController.text.trim().replaceAll(',', '.'));
+    final weightPercent = double.tryParse(
+      _weightController.text.trim().replaceAll(',', '.'),
+    );
     bool hasError = false;
 
     setState(() {
@@ -116,11 +120,20 @@ class _UpsertGradeSheetState extends ConsumerState<UpsertGradeSheet> {
       } else {
         _titleError = null;
       }
+      if (weightPercent == null ||
+          weightPercent <= 0 ||
+          weightPercent > 100) {
+        _weightError = 'Ingresá un porcentaje entre 0 y 100';
+        hasError = true;
+      } else {
+        _weightError = null;
+      }
     });
 
     if (hasError || _selectedSubjectId == null) return;
 
-    final weight = double.tryParse(_weightController.text.trim().replaceAll(',', '.')) ?? 1.0;
+    // Se guarda como fracción para que las notas antiguas sigan siendo compatibles.
+    final weight = (weightPercent ?? 100) / 100.0;
 
     if (widget.gradeToEdit == null) {
       await ref.read(gradeControllerProvider.notifier).createGrade(
@@ -323,10 +336,20 @@ class _UpsertGradeSheetState extends ConsumerState<UpsertGradeSheet> {
             Expanded(
               child: AppTextField(
                 controller: _weightController,
-                label: 'Ponderación (peso)',
-                hint: '1.0',
+                label: 'Ponderación (%)',
+                hint: '100',
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                errorText: _weightError,
                 prefixIcon: const Icon(Icons.scale_outlined, size: 20),
+                onChanged: (value) {
+                  final parsed = double.tryParse(value.trim().replaceAll(',', '.'));
+                  if (_weightError != null &&
+                      parsed != null &&
+                      parsed > 0 &&
+                      parsed <= 100) {
+                    setState(() => _weightError = null);
+                  }
+                },
               ),
             ),
           ],

@@ -20,6 +20,7 @@ import '../../grades/presentation/upsert_grade_sheet.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/presentation/avatar_view.dart';
 import '../../subjects/data/subject_repository.dart';
+import '../../subjects/domain/subject.dart';
 import '../../subjects/presentation/upsert_subject_sheet.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -65,8 +66,43 @@ class HomeScreen extends ConsumerWidget {
       return isPast && !hasGrade;
     }).toList();
 
-    // General Average
-    final overallAverage = GradeCalculations.calculateAverage(allGrades);
+    // El promedio general simple considera todas las notas por igual.
+    // El ponderado respeta el peso configurado en cada evaluación.
+    final overallAverage = allGrades.isEmpty
+        ? 0.0
+        : allGrades.fold<double>(0.0, (sum, grade) => sum + grade.value) /
+            allGrades.length;
+    final weightedAverage = GradeCalculations.calculateAverage(allGrades);
+
+    final passedSubjects = allSubjects
+        .where((subject) => subject.status == SubjectStatus.passed)
+        .toList();
+    final enrolledSubjects = allSubjects
+        .where((subject) =>
+            subject.status == SubjectStatus.enrolled ||
+            subject.status == SubjectStatus.retaking)
+        .length;
+    final totalCredits = allSubjects.fold<int>(
+      0,
+      (sum, subject) => sum + (subject.credits ?? 0),
+    );
+    final earnedCredits = passedSubjects.fold<int>(
+      0,
+      (sum, subject) => sum + (subject.credits ?? 0),
+    );
+
+    // Si todavía no se cargaron créditos, se usa la cantidad de materias
+    // registradas como referencia y se identifica claramente en pantalla.
+    final careerProgress = totalCredits > 0
+        ? (earnedCredits / totalCredits).clamp(0.0, 1.0).toDouble()
+        : (allSubjects.isEmpty
+            ? 0.0
+            : (passedSubjects.length / allSubjects.length)
+                .clamp(0.0, 1.0)
+                .toDouble());
+    final careerProgressLabel = totalCredits > 0
+        ? '$earnedCredits de $totalCredits créditos aprobados'
+        : '${passedSubjects.length} de ${allSubjects.length} materias aprobadas';
 
     return Scaffold(
       body: SafeArea(
@@ -243,7 +279,15 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xl),
             ],
 
-            // Academic Status Overview (Average & Subjects count)
+            // Resumen académico
+            Text(
+              'Resumen académico',
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.textPrimary(context),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Expanded(
@@ -276,7 +320,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                         const SizedBox(height: 2),
                         Text(
-                          allGrades.isNotEmpty ? '${allGrades.length} notas' : 'Sin notas',
+                          'Promedio simple',
                           style: AppTypography.caption.copyWith(
                             color: AppColors.textTertiary(context),
                           ),
@@ -292,6 +336,51 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          'PROMEDIO PONDERADO',
+                          style: AppTypography.eyebrow.copyWith(
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        allGrades.isNotEmpty
+                            ? AnimatedCounter(
+                                value: weightedAverage,
+                                precision: 2,
+                                style: AppTypography.statNumber.copyWith(
+                                  color: weightedAverage >= (profile?.passingGrade ?? 4.0)
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                ),
+                              )
+                            : Text(
+                                '-',
+                                style: AppTypography.statNumber.copyWith(
+                                  color: AppColors.textPrimary(context),
+                                ),
+                              ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Según el peso de cada nota',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textTertiary(context),
+                          ),
+                          maxLines: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
                           'MATERIAS CURSANDO',
                           style: AppTypography.eyebrow.copyWith(
                             color: AppColors.textSecondary(context),
@@ -299,7 +388,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         AnimatedCounter(
-                          value: allSubjects.length.toDouble(),
+                          value: enrolledSubjects.toDouble(),
                           precision: 0,
                           style: AppTypography.statNumber.copyWith(
                             color: theme.colorScheme.primary,
@@ -307,7 +396,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${allExams.length} exámenes total',
+                          '${allSubjects.length} materias registradas',
                           style: AppTypography.caption.copyWith(
                             color: AppColors.textTertiary(context),
                           ),
@@ -316,7 +405,107 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CRÉDITOS APROBADOS',
+                          style: AppTypography.eyebrow.copyWith(
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        AnimatedCounter(
+                          value: earnedCredits.toDouble(),
+                          precision: 0,
+                          style: AppTypography.statNumber.copyWith(
+                            color: AppColors.success,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          totalCredits > 0
+                              ? 'de $totalCredits créditos cargados'
+                              : 'Completá los créditos de tus materias',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textTertiary(context),
+                          ),
+                          maxLines: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.school_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 21,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Progreso de carrera',
+                              style: AppTypography.titleSmall.copyWith(
+                                color: AppColors.textPrimary(context),
+                              ),
+                            ),
+                            Text(
+                              totalCredits > 0
+                                  ? 'Calculado sobre los créditos de tus materias cargadas'
+                                  : 'Calculado sobre las materias que registraste',
+                              style: AppTypography.caption.copyWith(
+                                color: AppColors.textTertiary(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '${(careerProgress * 100).round()}%',
+                        style: AppTypography.titleMedium.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: LinearProgressIndicator(
+                      value: careerProgress,
+                      minHeight: 9,
+                      backgroundColor:
+                          theme.colorScheme.primary.withValues(alpha: 0.12),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    careerProgressLabel,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
 

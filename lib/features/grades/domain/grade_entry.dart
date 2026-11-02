@@ -24,6 +24,8 @@ class GradeEntry {
   final String subjectId;
   final String title;
   final double value;
+  /// Peso normalizado (0.7 representa el 70%).
+  /// La interfaz recibe porcentajes y los convierte antes de persistir.
   final double weight;
   final GradeKind kind;
   final bool isRetake;

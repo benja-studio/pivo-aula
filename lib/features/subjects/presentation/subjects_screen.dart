@@ -13,6 +13,7 @@ import '../../../core/design_system/components/pressable_scale.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../data/subject_repository.dart';
 import '../domain/subject_icons.dart';
+import '../domain/cuatrimestre.dart';
 import '../domain/subject.dart';
 import 'subject_controller.dart';
 import 'upsert_subject_sheet.dart';
@@ -83,6 +84,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                 (s.code?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
             return matchesStatus && matchesSearch;
           }).toList();
+          final cuatrimestres = Cuatrimestre.agruparMaterias(filtered);
 
           return CustomScrollView(
             physics: appScrollPhysics(),
@@ -169,13 +171,76 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final s = filtered[index];
+                        final cuatrimestre = cuatrimestres[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: _SubjectCard(subject: s),
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            elevation: 0,
+                            color: theme.colorScheme.surface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.7),
+                              ),
+                            ),
+                            child: Theme(
+                              data: theme.copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                initiallyExpanded: true,
+                                tilePadding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.xs,
+                                ),
+                                childrenPadding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.md,
+                                  0,
+                                  AppSpacing.md,
+                                  AppSpacing.sm,
+                                ),
+                                leading: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(13),
+                                  ),
+                                  child: Icon(
+                                    Icons.calendar_view_month_rounded,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                title: Text(
+                                  cuatrimestre.nombre,
+                                  style: AppTypography.titleMedium.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${cuatrimestre.cantidadMaterias} materias · '
+                                  '${cuatrimestre.materiasAprobadas} aprobadas',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.textSecondary(context),
+                                  ),
+                                ),
+                                children: cuatrimestre.materias
+                                    .map(
+                                      (materia) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: AppSpacing.sm,
+                                        ),
+                                        child: _SubjectCard(subject: materia),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ),
                         );
                       },
-                      childCount: filtered.length,
+                      childCount: cuatrimestres.length,
                     ),
                   ),
                 ),
