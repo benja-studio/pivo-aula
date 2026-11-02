@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../core/design_system/app_colors.dart';
-import '../core/design_system/app_radius.dart';
 import '../core/design_system/app_spacing.dart';
 import '../core/design_system/app_typography.dart';
 import '../core/design_system/academic_status_colors.dart';
@@ -140,16 +139,6 @@ class AppTheme {
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final subtleShadow = isDark
-        ? const <BoxShadow>[]
-        : [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.035),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ];
-
     return ThemeData(
       useMaterial3: true,
       brightness: scheme.brightness,
