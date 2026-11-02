@@ -25,6 +25,19 @@ class Cuatrimestre {
       .where((materia) => materia.status == SubjectStatus.passed)
       .fold(0, (sum, materia) => sum + (materia.credits ?? 0));
 
+  static int _compareSpanishNames(String a, String b) {
+    String normalize(String value) => value
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ñ', 'nz');
+    return normalize(a).compareTo(normalize(b));
+  }
+
   /// Agrupa las materias por cuatrimestre y ordena tanto los grupos como
   /// las materias para que la pantalla sea predecible.
   static List<Cuatrimestre> agruparMaterias(Iterable<Subject> materias) {
@@ -45,7 +58,7 @@ class Cuatrimestre {
         materias: List<Subject>.unmodifiable(ordenadas),
       );
     }).toList()
-      ..sort((a, b) => a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase()));
+      ..sort((a, b) => _compareSpanishNames(a.nombre, b.nombre));
 
     return List<Cuatrimestre>.unmodifiable(cuatrimestres);
   }
